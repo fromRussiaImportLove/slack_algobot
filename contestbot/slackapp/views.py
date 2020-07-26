@@ -24,16 +24,21 @@ class GetFile(View):
         '''slack присылает post запрос на указанный url. Все параметры
            которые есть в запросе можно посмотреть в словаре request.POST
         '''
+        print(request.POST.get('text'))
+
         username = request.POST.get('user_name')
         command = request.POST.get('command')
         text = request.POST.get('text')
         response_url = request.POST.get('response_url')
         channel_name = request.POST.get('channel_name')
         channel_id = request.POST.get('channel_id')
-        slack_send_file(channel_id)
+        if text == 'test1':
+            #тут я проверяю какой текст передан после комады /getfile 
+            slack_send_file(channel_id)
+            return HttpResponse('', 200)
 
         #Отвечаем с кодом 200. Текст ответа прийдет как сообщение от бота.
-        return HttpResponse('Вот держи файлик с ответами! ))', 200)
+        return HttpResponse(f'В моей базе пока есть только один файл - test1', 200)
 
 
 def slack_send_file(channel, **kwargs):
@@ -50,8 +55,8 @@ def slack_send_file(channel, **kwargs):
                 "token": settings.SLACK_BOT_TOKEN,
                 "channels": [channel,],
                 "filename": "test.doc",
-                "initial_comment": "Отличный файлик!",
-                "title": "ТЕСТ 2",
+                "initial_comment": "Держи файлик с исходными данными *Теста 1*.\nУ тебя осталось *2* подсказки.\nУдачного обучения!",
+                "title": "ТЕСТ 1",
             }
             #Если мы передадим в функцию дополнительные именованные аргументы, они будут включены в словарь
             data.update(kwargs)
@@ -115,6 +120,14 @@ class onInteractiv(View):
             if button == 'click_me_123':
                 '''У кнопок задаются уникальные значения для идентификации нажатия на определенной кнопке'''
                 slack_post_msg(text='Котику понравилось!', channel=channel)
+            elif button == 'click_me_1234':
+                #Мы можем добавлять дополнительные вложения к сообщениям - https://api.slack.com/methods/chat.postMessage#arg_attachments
+                attachments = json.dumps(photo_barsik)
+
+                #добавляем к сообщению блок с кнопкой Погладить котика - barsik из resourses.py
+                blocks = json.dumps(barsik)
+
+                slack_post_msg(text='', channel=channel, attachments=attachments, blocks=blocks)
 
         '''Внимание!!! Нужно ответить пустым текстом, иначе будет ошибка'''        
         return HttpResponse('', 200)
@@ -210,27 +223,15 @@ class Event(View):
                Отвечает сам себе бесконечно. Я тут проверяю, если есть подтип (там подтип -бот) и если есть bot_id,
                то не реагируем на такое событие
             '''
-
-            #Мы можем добавлять дополнительные вложения к сообщениям - https://api.slack.com/methods/chat.postMessage#arg_attachments
-            attachments = json.dumps([{
-                "image_url": "https://klike.net/uploads/posts/2019-07/1564314090_3.jpg", 
-                "text": "Барсик"
-                }])
             
-            #добавляем к сообщению блок с кнопкой Погладить котика - barsik из resourses.py
-            blocks = json.dumps([{
-                "type": "actions", 
-                "block_id": "actionblock789",
-                #"text": {"type": "mrkdwn", "text": "_Погладить котика_"},
-                "elements": [barsik,]
-                
-                }])
+            #добавляем к сообщению блок с кнопкой Хочу котика - cat из resourses.py
+            blocks = json.dumps(cat)
             slack_post_msg(
                 text=text, 
                 channel=body['event']['channel'],  
                 blocks=blocks,
                 icon_emoji=':chart_with_upwards_trend:',
-                attachments=attachments
+                #attachments=attachments
           
                 )
         return HttpResponse("ok", 200)
