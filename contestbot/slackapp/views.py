@@ -163,7 +163,6 @@ def slack_post_msg(text, channel, **kwargs):
 
     data.update(kwargs)
     
-
     response = requests.post(
         url="https://slack.com/api/chat.postMessage",
         data=data
@@ -211,9 +210,13 @@ class Event(View):
         body = json.loads(body_unicode)
         write_json(body)
         #print(body)
-        subtype = body['event'].get('subtype')
-        bot_id = body['event'].get('bot_id')
-        text = f"*{body['event']['text']}*"
+        event = body['event']
+        user = event.get('user')
+        channel = event.get('channel')
+        subtype = event.get('subtype')
+        bot_id = event.get('bot_id')
+        text = event.get('text')
+        event_type = event.get('type')
 
         if subtype is None and bot_id is None:
             '''Я не знаю пока как правильно проверить от человека прилетело событие или от бота
@@ -221,17 +224,39 @@ class Event(View):
                Отвечает сам себе бесконечно. Я тут проверяю, если есть подтип (там подтип -бот) и если есть bot_id,
                то не реагируем на такое событие
             '''
+            if event_type == 'app_home_opened':
+                #Если пользователь открыл чат с ботом
+                #добавляем к сообщению блок с кнопкой Хочу котика - cat из resourses.py
+                blocks = json.dumps(cat)
+                slack_post_msg(
+                    text=text, 
+                    channel=channel,  
+                    blocks=blocks,
+                    icon_emoji=':chart_with_upwards_trend:',
+                    #attachments=attachments
+                    )
+            elif event_type == 'reaction_added':
+                #Пользователь добавил реакцию(смайл) к сообщению
+                channel = event['item'].get('channel')
+                if event['reaction'] == '+1':
+                    text=f'Отлично, <@{user}>!, спасибо что прочитал! :yum:'
+                else:
+                    text=f'Не та реакция! Я ведь просил :+1: !'
+
+                slack_post_msg(text=text, channel=channel)
+
+            elif event_type == 'reaction_removed':
+                #удалил реакцию
+                text=f'Что? <@{user}>,ты передумад? :zany_face:'
+                channel = event['item'].get('channel')
+                slack_post_msg(text=text, channel=channel)
+            else:
+
+                if text == 'привет':
+                    slack_post_msg(text=f'Привет, <@{user}>!', channel=channel)
+                    
+
             
-            #добавляем к сообщению блок с кнопкой Хочу котика - cat из resourses.py
-            blocks = json.dumps(cat)
-            slack_post_msg(
-                text=text, 
-                channel=body['event']['channel'],  
-                blocks=blocks,
-                icon_emoji=':chart_with_upwards_trend:',
-                #attachments=attachments
-          
-                )
         return HttpResponse("ok", 200)
 
 
