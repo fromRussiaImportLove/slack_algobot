@@ -24,8 +24,6 @@ class GetFile(View):
         '''slack присылает post запрос на указанный url. Все параметры
            которые есть в запросе можно посмотреть в словаре request.POST
         '''
-        print(request.POST.get('text'))
-
         username = request.POST.get('user_name')
         command = request.POST.get('command')
         text = request.POST.get('text')
