@@ -1,0 +1,36 @@
+{
+  "token": "Cf6mUSfNU2pR2504R8X9tybK",
+  "team_id": "T0179PDFXUP",
+  "api_app_id": "A017QMWA0Q3",
+  "event": {
+    "bot_id": "B018EB58BL0",
+    "type": "message",
+    "text": "Котику понравилось!",
+    "user": "U017HPSCKPG",
+    "ts": "1595755863.012900",
+    "team": "T0179PDFXUP",
+    "bot_profile": {
+      "id": "B018EB58BL0",
+      "deleted": false,
+      "name": "YandexContest",
+      "updated": 1595656538,
+      "app_id": "A017QMWA0Q3",
+      "icons": {
+        "image_36": "https://a.slack-edge.com/80588/img/plugins/app/bot_36.png",
+        "image_48": "https://a.slack-edge.com/80588/img/plugins/app/bot_48.png",
+        "image_72": "https://a.slack-edge.com/80588/img/plugins/app/service_72.png"
+      },
+      "team_id": "T0179PDFXUP"
+    },
+    "channel": "D017QMX6B19",
+    "event_ts": "1595755863.012900",
+    "channel_type": "im"
+  },
+  "type": "event_callback",
+  "event_id": "Ev017JEUKM1U",
+  "event_time": 1595755863,
+  "authed_users": [
+    "U017HPSCKPG",
+    "U017WM9A4QL"
+  ]
+}

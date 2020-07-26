@@ -28,3 +28,14 @@ dialog_plot = {
 
     ]
 }
+
+barsik = {
+    "type": "button",
+    "text": {
+        "type": "plain_text",
+        "text": "Погладить котика!"
+    },
+    "value": "click_me_123",
+    "action_id": "button",
+    "style": "primary",
+}

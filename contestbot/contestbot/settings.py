@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 SLACK_BOT_TOKEN  = os.getenv('SLACK_BOT_TOKEN')
+SLACK_WEBHOOK_INC = os.getenv('SLACK_WEBHOOK_INC')
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
