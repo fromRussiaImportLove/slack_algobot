@@ -1,5 +1,33 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models import Sum
+
+
+class Faculty(models.Model):
+    title = models.CharField(
+        max_length=255, verbose_name='Название факультета')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Факультет'
+        verbose_name_plural = 'Факультеты'
+
+
+class Specialty(models.Model):
+    title = models.CharField(
+        max_length=255, verbose_name='Название специальности')
+    faculty = models.ForeignKey(
+        Faculty, on_delete=models.SET_NULL, related_name='specialty',
+        blank=True, null=True, verbose_name='Факультет')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Специальность'
+        verbose_name_plural = 'Специальности'
 
 
 class User(AbstractUser):
@@ -7,15 +35,18 @@ class User(AbstractUser):
         unique=True, verbose_name='id в Слаке', blank=True, null=True)
     cohort = models.PositiveSmallIntegerField(
         blank=True, null=True, verbose_name='Когорта')
+    specialty = models.ForeignKey(
+        Specialty, on_delete=models.SET_NULL, related_name='user',
+        blank=True, null=True, verbose_name='Специальность')
 
     def __str__(self):
         return f'{self.get_full_name()}, когорта {self.cohort}'
 
 
 class Sprint(models.Model):
-    faculty = models.CharField(
-        max_length=255, verbose_name='Факультет',
-        blank=True, null=True)
+    faculty = models.ForeignKey(
+        Faculty, on_delete=models.SET_NULL, related_name='sprint',
+        verbose_name='Факультет', blank=True, null=True)
     sprint_number = models.PositiveSmallIntegerField(
         verbose_name='Номер спринта')
     sprint_title = models.CharField(
@@ -34,9 +65,11 @@ class Contest(models.Model):
         verbose_name='Номер контеста')  # unqiue=True?
     contest_title = models.CharField(
         max_length=255, verbose_name='Название контеста')
-    sprint_number = models.ForeignKey(  # возможно manytomany
-        Sprint, on_delete=models.SET_NULL, blank=True, null=True,
-        related_name='contest', verbose_name='Спринт')
+    sprint_number = models.ManyToManyField(
+        Sprint, blank=True, related_name='contest',
+        verbose_name='Спринт')
+    test_limit = models.PositiveSmallIntegerField(
+        default=10, verbose_name='Лимит тестов')
 
     class Meta:
         verbose_name = "Контест"
@@ -75,8 +108,11 @@ class Test(models.Model):
         Problem, on_delete=models.CASCADE,
         related_name='test', verbose_name='Задача')
     number = models.PositiveSmallIntegerField(verbose_name='Номер теста')
-    test_file = models.FileField(
-        upload_to='tests_files/')
+    input_file = models.FileField(
+        upload_to='tests_files/',
+        verbose_name='Входные данные')
+    output_file = models.FileField(
+        upload_to='tests_files/', verbose_name='Ответ')
 
     class Meta:
         verbose_name = 'Тест'
@@ -107,11 +143,18 @@ class Restriction(models.Model):
     problem = models.ForeignKey(
         Problem, on_delete=models.CASCADE,
         related_name='restriction', verbose_name='Задача')
+    contest = models.ForeignKey(
+        Contest, on_delete=models.CASCADE,
+        related_name='restriction', verbose_name='Контест')
     request_counter = models.PositiveSmallIntegerField(
         default=0, verbose_name='Количество запросов на тесты')
 
-    def check_request_limit(self, problem):
-        return problem.test_limit >= self.request_counter
+    def is_in_limit(self):
+        contest_counter = Restriction.objects.filter(
+            user=self.user, contest=self.contest).aggregate(
+                result=Sum('request_counter'))
+        return (self.problem.test_limit > self.request_counter and
+                self.contest.test_limit > contest_counter['result'])
 
     def __str__(self):
         return f'{self.user}, Задача: {self.problem}'
