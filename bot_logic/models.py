@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.conf import settings
+import os
 
 
 User = get_user_model()
@@ -21,11 +23,29 @@ class Problem(models.Model):
 
 
 class Test(models.Model):
+
+    def file_name(instance, filename):
+        '''Генерируем путь и имя сохроняемого файла
+           Получаем расширение, контест, задачу. Формируем путь, имя файла.
+           Если файл уже существует, удаляем его перед сохранением.
+        '''
+        ext = filename.split('.')[-1]
+        contest = str(instance.problem.contest_number)
+        task = str(instance.problem.title)
+        path = contest + '/' + task + '/'
+        filename = "%s.%s" % (instance.number, ext)
+        fullname = os.path.join(settings.MEDIA_ROOT,
+                                'tests_files/', path, filename)
+        if os.path.exists(fullname):
+            os.remove(fullname)
+
+        return 'tests_files/' + path + filename
+
     problem = models.ForeignKey(
         Problem, on_delete=models.CASCADE, related_name='test', verbose_name='Задача')
     number = models.CharField(max_length=3, verbose_name='Номер теста')
     test_file = models.FileField(
-        upload_to='tests_files/')
+        upload_to=file_name)
 
     class Meta:
         verbose_name = "Тест"
