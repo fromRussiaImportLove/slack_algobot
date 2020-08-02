@@ -188,16 +188,6 @@ choose_hint = {
 
 def test_section(test):
     block = [
-        {
-            "type": "header",
-            "text": {
-                "type": "plain_text",
-                "text": "Исходные данные к тесту"
-            }
-        },
-        {
-            "type": "divider"
-        },
 
         {
             "type": "section",

@@ -119,6 +119,7 @@ class onInteractiv(View):
             selected_option = interactive_action[
                 "actions"][0].get("selected_option")
             channel = interactive_action["channel"]['id']
+            ts = interactive_action["message"]["ts"]
 
             if button == 'click_me_123':
                 '''У кнопок задаются уникальные значения для идентификации нажатия на определенной кнопке'''
@@ -127,7 +128,7 @@ class onInteractiv(View):
 
             elif button == 'click_me_1234':
                 client.chat_postMessage(
-                    channel=channel, text='', blocks=build_test_block())
+                    channel=channel, blocks=build_sprint_block())
 
             elif button == 'click_me_test':
                 print(interactive_action['trigger_id'])
@@ -138,12 +139,31 @@ class onInteractiv(View):
                 client.dialog_open(trigger_id=interactive_action[
                                    'trigger_id'], dialog=json.dumps(choose_hint))
 
+            elif block_id == 'choose_sprint':
+                block = choose_contest(request)
+
+            elif block_id == 'choose_contest':
+                block = choose_task(request)
+
+            elif block_id == 'choose_task':
+                block = choose_test(request)
+
             elif block_id == 'choose_test':
+                block = choose_test(request)
+
+            elif block_id == 'choose_test_final':
                 '''Обработка выбора селекта с тестами'''
-                test, ts = choose_test(request)
+                test, ts = choose_test_final(request)
                 # Обновляем сообщение
                 client.chat_update(
                     channel=channel, ts=ts, blocks=test_section(test))
+
+            block_id_list = ['choose_sprint',
+                             'choose_contest', 'choose_task', 'choose_test']
+
+            if block_id in block_id_list:
+                client.chat_update(
+                    channel=channel, ts=ts, blocks=block)
 
         '''Внимание!!! Нужно ответить пустым текстом, иначе будет ошибка'''
         return HttpResponse('', 200)
