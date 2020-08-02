@@ -187,20 +187,35 @@ choose_hint = {
 
 
 def test_section(test):
-    section = {
-        "type": "section",
-        "fields": [
-            {
-                "type": "mrkdwn",
-                "text": f"*Вы запросили данные:*\nСпринт: {test.problem.sprint_number}\nКонтест: {test.problem.contest_number}\nЗадача: {test.problem.title}"
-            },
-            {
-                "type": "mrkdwn",
-                "text": "*Доступные данные*\nОсталось подсказок · 3\nЧто еще тут вывести?"
-            },
+    block = [
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": "Исходные данные к тесту"
+            }
+        },
+        {
+            "type": "divider"
+        },
 
-        ],
+        {
+            "type": "section",
+            "fields": [
+                {
+                    "type": "mrkdwn",
+                    "text": f"*Вы запросили данные:*\n:briefcase:Спринт: {test.problem.sprint_number}\n:hammer_and_wrench:Контест: {test.problem.contest_number}\n:rocket:Задача: {test.problem.title}"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "*Доступные данные*\n:loud_sound: Осталось подсказок · 3\nЧто еще тут вывести?"
+                },
 
-    },
+            ],
 
-    return section
+        },
+        {
+            "type": "divider"
+        }, ]
+
+    return block
