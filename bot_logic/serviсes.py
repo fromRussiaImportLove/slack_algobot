@@ -16,7 +16,7 @@ def slack_send_file(channel, text, value, **kwargs):
             "channels": [channel, ],
             "filename": "test.txt",
             #"initial_comment": "Держи файлик с исходными данными *Теста 1*.\nУ тебя осталось *2* подсказки.\nУдачного обучения!",
-            "title": f"ТЕСТ {text}",
+            "title": f"{text}",
         }
         # Если мы передадим в функцию дополнительные именованные аргументы, они
         # будут включены в словарь

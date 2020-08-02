@@ -204,11 +204,11 @@ def test_section(test):
             "fields": [
                 {
                     "type": "mrkdwn",
-                    "text": f"*Вы запросили данные:*\n:briefcase:Спринт: {test.problem.sprint_number}\n:hammer_and_wrench:Контест: {test.problem.contest_number}\n:rocket:Задача: {test.problem.title}"
+                    "text": f"*Вы запросили данные:*\n:briefcase: Спринт: *{test.problem.sprint_number}*\n:hammer_and_wrench: Контест: *{test.problem.contest_number}*\n:rocket: Задача: *{test.problem.title}*"
                 },
                 {
                     "type": "mrkdwn",
-                    "text": "*Доступные данные*\n:loud_sound: Осталось подсказок · 3\nЧто еще тут вывести?"
+                    "text": "*Доступные данные*\n:loud_sound: Осталось подсказок · *3*\nЧто еще тут вывести?"
                 },
 
             ],
