@@ -15,8 +15,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-SLACK_BOT_TOKEN  = os.getenv('SLACK_BOT_TOKEN')
-SLACK_SIGNING_TOKEN = os.getenv('SLACK_SIGNING_TOKEN')
+SLACK_BOT_TOKEN = os.getenv('SLACK_BOT_TOKEN')
 SLACK_VERIFY_TOKEN = os.getenv('SLACK_VERIFY_TOKEN')
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)

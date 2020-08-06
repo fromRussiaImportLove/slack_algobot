@@ -1,211 +1,144 @@
-dialog_plot = {
-    "title": "Давай знакомится",
-    "submit_label": "Отправить",
-    "callback_id": "register_form",
-    "elements": [
-
+register_form = {  # Форма регистрации
+    "callback_id": "register-form",
+    "type": "modal",
+    "title": {
+        "type": "plain_text",
+        "text": "Давай знакомиться",
+    },
+    "submit": {
+        "type": "plain_text",
+        "text": "Отправить",
+    },
+    "close": {
+        "type": "plain_text",
+        "text": "Отменить",
+    },
+    "blocks": [
         {
-            "type": "text",
-            "label": "ФИО (полностью)",
-            "name": "name"
+            "type": "input",
+            "block_id": "first-name",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "0",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Введи своё имя..."
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Имя"
+            }
         },
-
         {
-            "type": "text",
-            "label": "Почта в Контесте",
-            "name": "email",
-
+            "type": "input",
+            "block_id": "last-name",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "0",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Введи свою фамилию..."
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Фамилия"
+            }
         },
-
         {
-            "type": "text",
-            "label": "Когорта",
-            "name": "kogort",
-            "value": 1
+            "type": "input",
+            "block_id": "email",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "0",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Введи свой email..."
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Почта в Контесте"
+            }
         },
+        {
+            "type": "input",
+            "block_id": "cohort",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "0",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Введи номер своей когорты..."
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Когорта"
+            }
+        }
     ]
 }
 
-photo_barsik = [{
-    "image_url": "https://cdn23.img.ria.ru/images/148839/96/1488399659_0:0:960:960_600x0_80_0_1_e38b72053fffa5d3d7e82d2fe116f0b3.jpg",
-    "text": "Барсик"
+anonymous_greeting = [{  # Приветствие незарегистрированного пользователя
+    "type": "section",
+    "text": {
+        "type": "mrkdwn",
+        "text": ("Привет, незнакомец! "
+                 "Прежде чем попросить помощь "
+                 "расскажи немного о себе. "
+                 "Нажми на кнопку 'Зарегистрироваться'.")
+        }
+    },
+    {
+    "type": "actions",
+    "block_id": "registerblock1",
+    "elements": [{
+        "type": "button",
+        "text": {
+            "type": "plain_text",
+            "text": "Зарегистрироваться"
+        },
+        "style": "primary",
+        "value": "click_me_register"
+        }
+    ]
 }]
 
-barsik = [{
-    "type": "actions",
-    "block_id": "actionblock789",
 
-    "elements": [{
-        "type": "button",
-        "text": {
-            "type": "plain_text",
-            "text": "Погладить котика!"
-        },
-        "value": "click_me_123",
-        "action_id": "button",
-        "style": "primary",
-    }, ]
-},
-
-]
-
-cat = [{
-    "type": "actions",
-    "block_id": "actionblock7891",
-
-    "elements": [{
-        "type": "button",
-        "text": {
-            "type": "plain_text",
-            "text": "Получить тесты"
-        },
-        "value": "click_me_1234",
-        "action_id": "button",
-        "style": "danger",
-    }, ]
-},
-    {
-    "type": "context",
-    "elements": [
-
-        {
-            "type": "mrkdwn",
-            "text": "Для того чтобы получить тест, необходимо пойти авторизацию - команда */register*\nПосле авторизации Вы сможите запросить исходные данные тестов - команда */gettest (тест)* или подсказки - команда */gethint (подсказка)* *\nСтавь :+1: если прочитал."
-        }
-    ]
-}
-]
-
-
-choose_your_destiny = [
-    {
+def user_greeting(user):
+    '''Приветствие зарегистрированного пользователя'''
+    block = [{
         "type": "section",
         "text": {
-                "type": "plain_text",
-                "text": "Привет! Чем могу помочь? Выбирай с умом",
-        }
-    },
-    {
+            "type": "mrkdwn",
+            "text": (f"Привет, <@{user}>! "
+                     "Ты можешь получить тест или подсказку к задаче. "
+                     "Выбирай с умом!")
+            }
+        },
+        {
         "type": "actions",
-        "block_id": "actionblock1",
-
-        "elements": [
-
-            {
-                "type": "button",
-                "text": {
-                    "type": "plain_text",
-                    "text": "Хочу тест"
-                },
-                "value": "click_me_test",
-                "action_id": "button1",
-                "style": "danger",
+        "block_id": "useractionblock",
+        "elements": [{
+            "type": "button",
+            "text": {
+                "type": "plain_text",
+                "text": "Получить тест"
+            },
+            "style": "primary",
+            "value": "click_me_test"
             },
             {
-                "type": "button",
-                "text": {
-                    "type": "plain_text",
-                    "text": "Хочу подсказку"
-                },
-                "value": "click_me_hint",
-                "action_id": "button2",
-                "style": "primary",
+            "type": "button",
+            "text": {
+                "type": "plain_text",
+                "text": "Получить подсказку"
             },
-        ],
-    },
-
-]
-
-
-choose_test = {
-    "title": "Выбери тест :)",
-    "submit_label": "Отправить",
-    "callback_id": "test_form",
-    "elements": [
-
-        {
-            "type": "text",
-            "label": "Номер спринта",
-            "name": "sprint"
-        },
-
-        {
-            "type": "text",
-            "label": "Номер контекста",
-            "name": "context",
-
-        },
-
-        {
-            "type": "text",
-            "label": "Название задачи",
-            "name": "task",
-            "value": 1
-        },
-        {
-            "type": "text",
-            "label": "Номер теста",
-            "name": "test",
-            "value": 1
-        },
-    ]
-}
-
-
-choose_hint = {
-    "title": "Выбери подсказку :)",
-    "submit_label": "Отправить",
-    "callback_id": "prompt_form",
-    "elements": [
-
-        {
-            "type": "text",
-            "label": "Номер спринта",
-            "name": "sprint"
-        },
-
-        {
-            "type": "text",
-            "label": "Номер контекста",
-            "name": "context",
-
-        },
-        {
-            "type": "text",
-            "label": "Название задачи",
-            "name": "task",
-            "value": 1
-        },
-        {
-            "type": "text",
-            "label": "Номер подсказки",
-            "name": "prompt",
-            "value": 1
-        },
-    ]
-}
-
-
-def test_section(test):
-    block = [
-
-        {
-            "type": "section",
-            "fields": [
-                {
-                    "type": "mrkdwn",
-                    "text": f"*Вы запросили данные:*\n:briefcase: Спринт: *{test.problem.sprint_number}*\n:hammer_and_wrench: Контест: *{test.problem.contest_number}*\n:rocket: Задача: *{test.problem.title}*"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": "*Доступные данные*\n:loud_sound: Осталось подсказок · *3*\nЧто еще тут вывести?"
-                },
-
-            ],
-
-        },
-        {
-            "type": "divider"
-        }, ]
-
+            "style": "primary",
+            "value": "click_me_hint"
+            }
+        ]
+    }]
     return block

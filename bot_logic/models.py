@@ -31,8 +31,9 @@ class Specialty(models.Model):
 
 
 class User(AbstractUser):
-    slack_id = models.PositiveSmallIntegerField(
-        unique=True, verbose_name='id в Слаке', blank=True, null=True)
+    slack_id = models.CharField(
+        max_length=255, unique=True, verbose_name='id в Слаке',
+        blank=True, null=True)
     cohort = models.PositiveSmallIntegerField(
         blank=True, null=True, verbose_name='Когорта')
     specialty = models.ForeignKey(
