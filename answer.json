@@ -1,0 +1,84 @@
+{
+  "type": "block_actions",
+  "user": {
+    "id": "U017QQYTH0B",
+    "username": "igorian3",
+    "name": "igorian3",
+    "team_id": "T017WQCBR28"
+  },
+  "api_app_id": "A017WUX21M2",
+  "token": "PJD9cSLu5I4LDWMnm8y5ZCKo",
+  "container": {
+    "type": "message",
+    "message_ts": "1596814905.002300",
+    "channel_id": "D017QPFN9H8",
+    "is_ephemeral": false
+  },
+  "trigger_id": "1301313258497.1268828399076.e9df7027c5b1554550b71e703d158e33",
+  "team": {
+    "id": "T017WQCBR28",
+    "domain": "yandexalgobot"
+  },
+  "channel": {
+    "id": "D017QPFN9H8",
+    "name": "directmessage"
+  },
+  "message": {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "This content can't be displayed.",
+    "ts": "1596814905.002300",
+    "username": "ALgo",
+    "icons": {
+      "emoji": ":chart_with_upwards_trend:",
+      "image_64": "https://a.slack-edge.com/80588/img/emoji_2017_12_06/apple/1f4c8.png"
+    },
+    "bot_id": "B018EJS5Y80",
+    "blocks": [
+      {
+        "type": "actions",
+        "block_id": "actionblock7891",
+        "elements": [
+          {
+            "type": "button",
+            "action_id": "button",
+            "text": {
+              "type": "plain_text",
+              "text": "Получить тесты",
+              "emoji": true
+            },
+            "style": "danger",
+            "value": "click_me_1234"
+          }
+        ]
+      },
+      {
+        "type": "context",
+        "block_id": "sWm=",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "Для того чтобы получить тест, необходимо пойти авторизацию - команда */register*\nПосле авторизации Вы сможите запросить исходные данные тестов - команда */gettest (тест)* или подсказки - команда */gethint (подсказка)* *\nСтавь :+1: если прочитал.",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  "response_url": "https://hooks.slack.com/actions/T017WQCBR28/1288687670850/i2YAtGuSEsONpaYTlJMewRkJ",
+  "actions": [
+    {
+      "action_id": "button",
+      "block_id": "actionblock7891",
+      "text": {
+        "type": "plain_text",
+        "text": "Получить тесты",
+        "emoji": true
+      },
+      "value": "click_me_1234",
+      "style": "danger",
+      "type": "button",
+      "action_ts": "1596822565.919636"
+    }
+  ]
+}
