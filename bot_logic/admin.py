@@ -16,21 +16,21 @@ class SpecialtyAdmin(admin.ModelAdmin):
 
 
 class SprintAdmin(admin.ModelAdmin):
-    list_display = ('sprint_number', 'sprint_title', 'faculty', )
+    list_display = ('number', 'title', 'specialty', )
     search_fields = ('number', 'title', )
 
 
 class ContestAdmin(admin.ModelAdmin):
-    list_display = ('contest_number', 'contest_title', 'test_limit', )
-    search_fields = ('contest_number', 'contest_title', )
-    list_filter = ('sprint_number', )
+    list_display = ('number', 'title', 'test_limit', )
+    search_fields = ('number', 'title', )
+    list_filter = ('sprint', )
 
 
 class ProblemAdmin(admin.ModelAdmin):
-    list_display = ('title', 'full_title', 'sprint_number',
-                    'contest_number', 'test_limit', )
+    list_display = ('title', 'full_title',
+                    'contest', 'test_limit', )
     search_fields = ('title', 'full_title', )
-    list_filter = ('sprint_number', 'contest_number', )
+    list_filter = ('contest__sprint', 'contest', )
 
 
 class TestAdmin(admin.ModelAdmin):
@@ -48,7 +48,7 @@ class HintAdmin(admin.ModelAdmin):
 class RestrictionAdmin(admin.ModelAdmin):
     list_display = ('user', 'problem', 'contest', 'request_counter', )
     search_fields = ('user__first_name', 'user__last_name',
-                     'problem__full_title', 'contest__contest_title', )
+                     'problem__full_title', 'contest__title', )
 
 
 class UserTestPairAdmin(admin.ModelAdmin):

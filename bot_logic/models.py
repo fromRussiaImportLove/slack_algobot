@@ -7,12 +7,12 @@ class Faculty(models.Model):
     title = models.CharField(
         max_length=255, verbose_name='Название факультета')
 
-    def __str__(self):
-        return self.title
-
     class Meta:
         verbose_name = 'Факультет'
         verbose_name_plural = 'Факультеты'
+
+    def __str__(self):
+        return self.title
 
 
 class Specialty(models.Model):
@@ -22,12 +22,12 @@ class Specialty(models.Model):
         Faculty, on_delete=models.SET_NULL, related_name='specialty',
         blank=True, null=True, verbose_name='Факультет')
 
-    def __str__(self):
-        return self.title
-
     class Meta:
         verbose_name = 'Специальность'
         verbose_name_plural = 'Специальности'
+
+    def __str__(self):
+        return self.title
 
 
 class User(AbstractUser):
@@ -45,12 +45,12 @@ class User(AbstractUser):
 
 
 class Sprint(models.Model):
-    faculty = models.ForeignKey(
-        Faculty, on_delete=models.SET_NULL, related_name='sprint',
-        verbose_name='Факультет', blank=True, null=True)
-    sprint_number = models.PositiveSmallIntegerField(
+    specialty = models.ForeignKey(
+        Specialty, on_delete=models.SET_NULL, related_name='sprint',
+        verbose_name='Специальность', blank=True, null=True)
+    number = models.PositiveSmallIntegerField(
         verbose_name='Номер спринта')
-    sprint_title = models.CharField(
+    title = models.CharField(
         max_length=255, verbose_name='Название спринта')
 
     class Meta:
@@ -58,15 +58,15 @@ class Sprint(models.Model):
         verbose_name_plural = 'Спринты'
 
     def __str__(self):
-        return f'{str(self.sprint_number)}. {self.sprint_title}'
+        return f'{self.number}. {self.title}'
 
 
 class Contest(models.Model):
-    contest_number = models.PositiveSmallIntegerField(
+    number = models.PositiveSmallIntegerField(
         verbose_name='Номер контеста')  # unqiue=True?
-    contest_title = models.CharField(
+    title = models.CharField(
         max_length=255, verbose_name='Название контеста')
-    sprint_number = models.ManyToManyField(
+    sprint = models.ManyToManyField(
         Sprint, blank=True, related_name='contest',
         verbose_name='Спринт')
     test_limit = models.PositiveSmallIntegerField(
@@ -77,17 +77,14 @@ class Contest(models.Model):
         verbose_name_plural = "Контесты"
 
     def __str__(self):
-        return f'{str(self.contest_number)}. {self.contest_title}'
+        return f'{self.number}. {self.title}'
 
 
 class Problem(models.Model):
-    sprint_number = models.ForeignKey(
-        Sprint, on_delete=models.SET_NULL, blank=True, null=True,
-        related_name='problem', verbose_name='Спринт')
-    contest_number = models.ForeignKey(
+    contest = models.ForeignKey(
         Contest, on_delete=models.CASCADE,
         related_name='problem', verbose_name='Контест')
-    title = models.CharField(max_length=3, verbose_name='Название задачи')
+    title = models.CharField(max_length=3, verbose_name='Номер задачи')
     full_title = models.CharField(
         max_length=255, verbose_name='Полное название')
     test_limit = models.PositiveSmallIntegerField(
@@ -98,10 +95,14 @@ class Problem(models.Model):
         verbose_name_plural = 'Задачи'
 
     def __str__(self):
-        return (f'{self.sprint_number} '
-                f'{self.contest_number} '
+        return (f'{self.sprint}'
+                f'{self.contest} '
                 f'{self.title}. '
                 f'{self.full_title}')
+
+    @property
+    def sprint(self):
+        return self.contest.sprint.first()
 
 
 class Test(models.Model):
@@ -150,19 +151,19 @@ class Restriction(models.Model):
     request_counter = models.PositiveSmallIntegerField(
         default=0, verbose_name='Количество запросов на тесты')
 
+    class Meta:
+        verbose_name = 'Ограничение'
+        verbose_name_plural = 'Ограничения'
+
+    def __str__(self):
+        return f'{self.user}, Задача: {self.problem}'
+
     def is_in_limit(self):
         contest_counter = Restriction.objects.filter(
             user=self.user, contest=self.contest).aggregate(
                 result=Sum('request_counter'))
         return (self.problem.test_limit > self.request_counter and
                 self.contest.test_limit > contest_counter['result'])
-
-    def __str__(self):
-        return f'{self.user}, Задача: {self.problem}'
-
-    class Meta:
-        verbose_name = 'Ограничение'
-        verbose_name_plural = 'Ограничения'
 
 
 class UserTestPair(models.Model):
