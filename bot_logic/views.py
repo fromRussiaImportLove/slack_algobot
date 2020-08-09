@@ -1,15 +1,16 @@
 import json
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 from slack import WebClient
 
-from .models import Specialty, User
+from .models import Specialty, Student
 from .resources import anonymous_greeting, register_form, user_greeting
-from .services import options_generator
+from .services import options_generator, validation_generator
 
 client = WebClient(token=settings.SLACK_BOT_TOKEN)
 
@@ -24,14 +25,14 @@ class onInteractive(View):
         if payload_type == 'block_actions':
             button = payload["actions"][0].get('value')
             if button == 'click_me_register':
-                user_registration(payload)
+                response = user_registration(payload)
 
         if payload_type == 'view_submission':
             callback_id = payload['view']['callback_id']
             if callback_id == 'register-form':
-                user_registration(payload)
+                response = user_registration(payload)
 
-        return HttpResponse(status=200)
+        return response
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -58,7 +59,7 @@ class Event(View):
             channel = event.get('channel')
             event_type = event.get('type')
 
-            if User.objects.filter(slack_id=user).exists():
+            if Student.objects.filter(slack_id=user).exists():
                 greeting = user_greeting(user)
             else:
                 greeting = anonymous_greeting
@@ -88,29 +89,37 @@ class Select(View):
 
 
 def user_registration(payload):
-    '''Вывод формы регистрации и добавление пользователя в базу'''
+    '''Вывод формы регистрации, валидация и добавление пользователя в базу'''
     slack_id = payload['user']['id']
-    if User.objects.filter(slack_id=slack_id).exists():
+    if Student.objects.filter(slack_id=slack_id).exists():
         channel = payload['channel']['id']
         text = f'Мы уже знакомы, <@{slack_id}>!'
         client.chat_postMessage(channel=channel, text=text)
-        return
+        return HttpResponse(status=200)
 
     if payload['type'] == 'block_actions':
         client.views_open(trigger_id=payload['trigger_id'],
                           view=json.dumps(register_form))
-        return
+        return HttpResponse(status=200)
 
     data = payload['view']['state']['values']
-    first_name = data['first-name']['0']['value']
-    last_name = data['last-name']['0']['value']
+    first_name = data['first_name']['0']['value']
+    last_name = data['last_name']['0']['value']
     email = data['email']['0']['value']
     cohort = data['cohort']['0']['value']
     specialty = data['specialty']['0']['selected_option']['value']
     specialty = Specialty.objects.get(pk=specialty)
-    User.objects.create(first_name=first_name, last_name=last_name,
-                        email=email, cohort=int(cohort), slack_id=slack_id,
-                        specialty=specialty)
+    user = Student(first_name=first_name, last_name=last_name, email=email,
+                   cohort=cohort, slack_id=slack_id, specialty=specialty)
 
-    client.chat_postMessage(channel=f'@{slack_id}',
-                            blocks=user_greeting(slack_id))
+    try:
+        user.clean_fields()
+        user.save()
+        client.chat_postMessage(channel=f'@{slack_id}',
+                                blocks=user_greeting(slack_id))
+        return HttpResponse(status=200)
+
+    except ValidationError as e:
+        errors = e.message_dict
+        response = validation_generator(errors)
+        return JsonResponse(response, safe=False)
