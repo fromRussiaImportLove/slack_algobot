@@ -1,0 +1,89 @@
+{
+  "type": "block_actions",
+  "user": {
+    "id": "U017KDAAFU5",
+    "username": "dmitry.brezgunov",
+    "name": "dmitry.brezgunov",
+    "team_id": "T017G0DLWKW"
+  },
+  "api_app_id": "A018KD33WGL",
+  "token": "NOmXv1UlesLAcQKwnMJFPrgP",
+  "container": {
+    "type": "message",
+    "message_ts": "1596978675.001700",
+    "channel_id": "D01933P7XTJ",
+    "is_ephemeral": false
+  },
+  "trigger_id": "1290454029955.1254013710676.336556821af67bd682f571b53e2d0503",
+  "team": {
+    "id": "T017G0DLWKW",
+    "domain": "slackbotbuildersgroup"
+  },
+  "channel": {
+    "id": "D01933P7XTJ",
+    "name": "directmessage"
+  },
+  "message": {
+    "bot_id": "B018KDV7ZNG",
+    "type": "message",
+    "text": "This content can't be displayed.",
+    "user": "U017YFYHRDM",
+    "ts": "1596978675.001700",
+    "team": "T017G0DLWKW",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "=ugA",
+        "text": {
+          "type": "mrkdwn",
+          "text": "Привет, <@U017KDAAFU5>! Ты можешь получить тест или подсказку к задаче. Выбирай с умом!",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "actions",
+        "block_id": "useractionblock",
+        "elements": [
+          {
+            "type": "button",
+            "action_id": "BnNG",
+            "text": {
+              "type": "plain_text",
+              "text": "Получить тест",
+              "emoji": true
+            },
+            "style": "primary",
+            "value": "click_me_test"
+          },
+          {
+            "type": "button",
+            "action_id": "cqO+0",
+            "text": {
+              "type": "plain_text",
+              "text": "Получить подсказку",
+              "emoji": true
+            },
+            "style": "primary",
+            "value": "click_me_hint"
+          }
+        ]
+      }
+    ]
+  },
+  "response_url": "https://hooks.slack.com/actions/T017G0DLWKW/1302873507473/c9nFPby0544MKoZv1QYExGHR",
+  "actions": [
+    {
+      "action_id": "cqO+0",
+      "block_id": "useractionblock",
+      "text": {
+        "type": "plain_text",
+        "text": "Получить подсказку",
+        "emoji": true
+      },
+      "value": "click_me_hint",
+      "style": "primary",
+      "type": "button",
+      "action_ts": "1596978684.603203"
+    }
+  ]
+}

@@ -1,13 +1,15 @@
-from django.views.generic import View
-from django.http import HttpResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from django.conf import settings
 import json
-from .resources import anonymous_greeting, user_greeting, register_form
-from slack import WebClient
-from .models import User
 
+from django.conf import settings
+from django.http import HttpResponse, JsonResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import View
+from slack import WebClient
+
+from .models import Specialty, User
+from .resources import anonymous_greeting, register_form, user_greeting
+from .services import options_generator
 
 client = WebClient(token=settings.SLACK_BOT_TOKEN)
 
@@ -18,15 +20,18 @@ class onInteractive(View):
     def post(self, request):
         payload = json.loads(request.POST.get('payload'))
         payload_type = payload['type']
+
         if payload_type == 'block_actions':
             button = payload["actions"][0].get('value')
             if button == 'click_me_register':
                 user_registration(payload)
+
         if payload_type == 'view_submission':
             callback_id = payload['view']['callback_id']
             if callback_id == 'register-form':
                 user_registration(payload)
-        return HttpResponse('', 200)
+
+        return HttpResponse(status=200)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -66,7 +71,20 @@ class Event(View):
                 client.chat_postMessage(
                     channel=channel, blocks=greeting)
 
-        return HttpResponse("ok", 200)
+        return HttpResponse('ok', 200)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class Select(View):
+    '''Обработчик запросов external_select. Должен вернуть json ответ
+    со списком опций которые можно выбрать в форме'''
+    def post(self, request):
+        selector = json.loads(request.POST.get('payload'))
+        if selector['block_id'] == 'specialty':
+            objects_list = Specialty.objects.all()
+            options = options_generator(objects_list)
+
+        return JsonResponse({"options": options}, safe=False)
 
 
 def user_registration(payload):
@@ -83,12 +101,16 @@ def user_registration(payload):
                           view=json.dumps(register_form))
         return
 
-    first_name = payload['view']['state']['values']['first-name']['0']['value']
-    last_name = payload['view']['state']['values']['last-name']['0']['value']
-    email = payload['view']['state']['values']['email']['0']['value']
-    cohort = payload['view']['state']['values']['cohort']['0']['value']
+    data = payload['view']['state']['values']
+    first_name = data['first-name']['0']['value']
+    last_name = data['last-name']['0']['value']
+    email = data['email']['0']['value']
+    cohort = data['cohort']['0']['value']
+    specialty = data['specialty']['0']['selected_option']['value']
+    specialty = Specialty.objects.get(pk=specialty)
     User.objects.create(first_name=first_name, last_name=last_name,
-                        email=email, cohort=int(cohort), slack_id=slack_id)
+                        email=email, cohort=int(cohort), slack_id=slack_id,
+                        specialty=specialty)
 
     client.chat_postMessage(channel=f'@{slack_id}',
                             blocks=user_greeting(slack_id))
