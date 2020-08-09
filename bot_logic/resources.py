@@ -16,7 +16,7 @@ register_form = {  # Форма регистрации
     "blocks": [
         {
             "type": "input",
-            "block_id": "first-name",
+            "block_id": "first_name",
             "element": {
                 "type": "plain_text_input",
                 "action_id": "0",
@@ -32,7 +32,7 @@ register_form = {  # Форма регистрации
         },
         {
             "type": "input",
-            "block_id": "last-name",
+            "block_id": "last_name",
             "element": {
                 "type": "plain_text_input",
                 "action_id": "0",

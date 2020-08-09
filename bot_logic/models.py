@@ -1,4 +1,3 @@
-from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import Sum
 
@@ -30,18 +29,24 @@ class Specialty(models.Model):
         return self.title
 
 
-class User(AbstractUser):
+class Student(models.Model):
+    first_name = models.CharField(max_length=255, verbose_name='Имя')
+    last_name = models.CharField(max_length=255, verbose_name='Фамилия')
+    email = models.EmailField(verbose_name='Электронная почта')
     slack_id = models.CharField(
-        max_length=255, unique=True, verbose_name='id в Слаке',
-        blank=True, null=True)
+        max_length=255, unique=True, verbose_name='id в Слаке')
     cohort = models.PositiveSmallIntegerField(
         blank=True, null=True, verbose_name='Когорта')
     specialty = models.ForeignKey(
         Specialty, on_delete=models.SET_NULL, related_name='user',
         blank=True, null=True, verbose_name='Специальность')
 
+    class Meta:
+        verbose_name = 'Студент'
+        verbose_name_plural = 'Студенты'
+
     def __str__(self):
-        return f'{self.get_full_name()}, когорта {self.cohort}'
+        return f'{self.first_name} {self.last_name}, когорта {self.cohort}'
 
 
 class Sprint(models.Model):
@@ -140,7 +145,7 @@ class Hint(models.Model):
 
 class Restriction(models.Model):
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE,
+        Student, on_delete=models.CASCADE,
         related_name='restriction', verbose_name='Студент')
     problem = models.ForeignKey(
         Problem, on_delete=models.CASCADE,
@@ -168,7 +173,7 @@ class Restriction(models.Model):
 
 class UserTestPair(models.Model):
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE,
+        Student, on_delete=models.CASCADE,
         related_name='user_test_pair', verbose_name='Студент')
     test = models.ForeignKey(
         Test, on_delete=models.CASCADE,
