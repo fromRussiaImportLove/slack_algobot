@@ -77,6 +77,23 @@ register_form = {  # Форма регистрации
                 "type": "plain_text",
                 "text": "Когорта"
             }
+        },
+        {
+            "type": "input",
+            "block_id": "specialty",
+            "element": {
+                "type": "external_select",
+                "min_query_length": 0,
+                "action_id": "0",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Выбери специальность..."
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Специальность"
+            }
         }
     ]
 }
