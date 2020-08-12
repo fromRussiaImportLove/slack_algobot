@@ -4,12 +4,44 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.conf import settings
 import json
-from .resources import anonymous_greeting, user_greeting, register_form
+from .resources import anonymous_greeting, user_greeting, register_form, get_hint_form, get_hint_form2
 from slack import WebClient
-from .models import User
+from .models import User, Hint
+from logging import getLogger
+from .block_hint import GetHintForm
+from django.forms import ModelForm
 
 
+logger = getLogger(__name__)
 client = WebClient(token=settings.SLACK_BOT_TOKEN)
+
+
+def get_hint(payload):
+    '''Вывод формы с запросом спринта/контеста/задачи'''
+    slack_id = payload['user']['id']
+
+    if payload['type'] == 'block_actions':
+        hint_form = GetHintForm()
+
+        if payload.get('view'):
+            if payload['view'].get('callback_id') == 'get-hint-form':
+                client.views_update(view=hint_form(payload),
+                                    view_id=payload['view']['id'])
+                return
+
+        client.views_open(trigger_id=payload['trigger_id'],
+                          view=hint_form(payload))
+        return
+
+    if payload['type'] == 'view_submission' and 'block-hint' in payload['view']['state']['values'].keys():
+        hint_id = payload['view']['state']['values']['block-hint']['get-hint-complete']['selected_option']['value']
+        hint = Hint.objects.get(id=hint_id)
+        logger.info(hint)
+        client.chat_postMessage(channel=f'@{slack_id}', text=f'{hint}')
+        return
+
+    client.chat_postMessage(channel=f'@{slack_id}',
+                            blocks=user_greeting(slack_id))
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -18,14 +50,22 @@ class onInteractive(View):
     def post(self, request):
         payload = json.loads(request.POST.get('payload'))
         payload_type = payload['type']
+
+        logger.info(payload)
+
         if payload_type == 'block_actions':
             button = payload["actions"][0].get('value')
             if button == 'click_me_register':
                 user_registration(payload)
+            if button == 'click_me_hint' or payload.get('view').get('callback_id') == 'get-hint-form':
+                get_hint(payload)
         if payload_type == 'view_submission':
             callback_id = payload['view']['callback_id']
+            if callback_id == 'get-hint-form':
+                get_hint(payload)
             if callback_id == 'register-form':
                 user_registration(payload)
+
         return HttpResponse('', 200)
 
 
