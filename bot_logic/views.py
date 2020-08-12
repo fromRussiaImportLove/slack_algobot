@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.conf import settings
 import json
-from .resources import anonymous_greeting, user_greeting, register_form, get_hint_form, get_hint_form2
+from .resources import anonymous_greeting, user_greeting, register_form
 from slack import WebClient
 from .models import User, Hint
 from logging import getLogger
