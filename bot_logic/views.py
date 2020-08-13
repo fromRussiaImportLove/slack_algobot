@@ -1,13 +1,14 @@
-from django.views.generic import View
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 from slack import WebClient
-from .models import User, Hint
+from .models import Hint
 from logging import getLogger
 from .block_hint import GetHintForm
-from django.forms import ModelForm
+import json
 
 from .models import Specialty, Student
 from .resources import anonymous_greeting, register_form, user_greeting
@@ -18,7 +19,7 @@ client = WebClient(token=settings.SLACK_BOT_TOKEN)
 
 
 def get_hint(payload):
-    '''Вывод формы с запросом спринта/контеста/задачи'''
+    """Вывод формы с запросом спринта/контеста/задачи"""
     slack_id = payload['user']['id']
 
     if payload['type'] == 'block_actions':
@@ -46,8 +47,9 @@ def get_hint(payload):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class onInteractive(View):
-    '''Обработчик нажатий на кнопки'''
+class OnInteractive(View):
+    """Обработчик нажатий на кнопки"""
+
     def post(self, request):
         payload = json.loads(request.POST.get('payload'))
         payload_type = payload['type']
@@ -58,7 +60,6 @@ class onInteractive(View):
             button = payload["actions"][0].get('value')
             if button == 'click_me_register':
                 response = user_registration(payload)
-
 
             if button == 'click_me_hint' or payload.get('view').get('callback_id') == 'get-hint-form':
                 get_hint(payload)
@@ -74,8 +75,9 @@ class onInteractive(View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class Event(View):
-    '''Обработчик событий. Выводит сообщение когда пользователь
-    открывает диалог с ботом'''
+    """Обработчик событий. Выводит сообщение когда пользователь
+    открывает диалог с ботом"""
+
     def post(self, request):
         body = json.loads(request.body.decode('utf-8'))
 
@@ -114,8 +116,9 @@ class Event(View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class Select(View):
-    '''Обработчик запросов external_select. Должен вернуть json ответ
-    со списком опций которые можно выбрать в форме'''
+    """Обработчик запросов external_select. Должен вернуть json ответ
+    со списком опций которые можно выбрать в форме"""
+
     def post(self, request):
         selector = json.loads(request.POST.get('payload'))
         if selector['block_id'] == 'specialty':
@@ -126,7 +129,7 @@ class Select(View):
 
 
 def user_registration(payload):
-    '''Вывод формы регистрации, валидация и добавление пользователя в базу'''
+    """Вывод формы регистрации, валидация и добавление пользователя в базу"""
     slack_id = payload['user']['id']
     if Student.objects.filter(slack_id=slack_id).exists():
         channel = payload['channel']['id']
