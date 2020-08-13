@@ -1,4 +1,4 @@
-from .models import Sprint, Contest, Problem, Hint, User
+from .models import Sprint, Contest, Problem, Hint, Student
 from logging import getLogger
 import json
 
@@ -21,7 +21,7 @@ class GetHintForm():
         if payload:
             logger.info('in class, we are ###', payload)
             if payload.get('user'):
-                self.user = User.objects.get(slack_id=payload['user']['id'])
+                self.user = Student.objects.get(slack_id=payload['user']['id'])
                 spec = self.user.specialty
             if payload['actions'][0]['block_id'] == 'useractionblock':
                 return self.build_sprint()
