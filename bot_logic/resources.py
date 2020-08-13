@@ -16,7 +16,7 @@ register_form = {  # Форма регистрации
     "blocks": [
         {
             "type": "input",
-            "block_id": "first-name",
+            "block_id": "first_name",
             "element": {
                 "type": "plain_text_input",
                 "action_id": "0",
@@ -32,7 +32,7 @@ register_form = {  # Форма регистрации
         },
         {
             "type": "input",
-            "block_id": "last-name",
+            "block_id": "last_name",
             "element": {
                 "type": "plain_text_input",
                 "action_id": "0",
@@ -76,6 +76,23 @@ register_form = {  # Форма регистрации
             "label": {
                 "type": "plain_text",
                 "text": "Когорта"
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "specialty",
+            "element": {
+                "type": "external_select",
+                "min_query_length": 0,
+                "action_id": "0",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Выбери специальность..."
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Специальность"
             }
         }
     ]

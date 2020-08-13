@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from .models import (Contest, Hint, Problem, Restriction, Sprint, Test, User,
-                     UserTestPair, Faculty, Specialty)
+from .models import (Contest, Faculty, Hint, Problem, Restriction, Specialty,
+                     Sprint, Student, Test, UserTestPair)
 
 
 class FacultyAdmin(admin.ModelAdmin):
@@ -57,7 +57,7 @@ class UserTestPairAdmin(admin.ModelAdmin):
     list_filter = ('test', )
 
 
-class UserAdmin(admin.ModelAdmin):
+class StudentAdmin(admin.ModelAdmin):
     list_display = ('slack_id', 'first_name', 'last_name',
                     'specialty', 'cohort', )
     search_fields = ('first_name', 'last_name', 'slack_id', )
@@ -71,6 +71,6 @@ admin.site.register(Test, TestAdmin)
 admin.site.register(Hint, HintAdmin)
 admin.site.register(Restriction, RestrictionAdmin)
 admin.site.register(UserTestPair, UserTestPairAdmin)
-admin.site.register(User, UserAdmin)
+admin.site.register(Student, StudentAdmin)
 admin.site.register(Faculty, FacultyAdmin)
 admin.site.register(Specialty, SpecialtyAdmin)

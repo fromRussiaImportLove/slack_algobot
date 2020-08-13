@@ -29,7 +29,7 @@ LOGGING = {
     },
 }
 
-SLACK_BOT_TOKEN  = os.getenv('SLACK_BOT_TOKEN')
+SLACK_BOT_TOKEN = os.getenv('SLACK_BOT_TOKEN')
 SLACK_SIGNING_TOKEN = os.getenv('SLACK_SIGNING_TOKEN')
 SLACK_VERIFY_TOKEN = os.getenv('SLACK_VERIFY_TOKEN')
 
@@ -124,8 +124,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
-
-AUTH_USER_MODEL = 'bot_logic.User'
 
 LANGUAGE_CODE = 'ru'
 
