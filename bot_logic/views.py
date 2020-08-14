@@ -5,46 +5,56 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 from slack import WebClient
-from .models import Hint
+from .models import Hint, Contest, Problem, Test, UserTestPair
 from logging import getLogger
 from .block_hint import GetHintForm
 import json
 
-from .models import Specialty, Student
+from .models import Specialty, Student, Sprint, Restriction
 from .resources import anonymous_greeting, register_form, user_greeting
-from .services import options_generator, validation_generator
+from .services import options_generator, validation_generator, slack_send_file
 
 logger = getLogger(__name__)
 client = WebClient(token=settings.SLACK_BOT_TOKEN)
-
+hint_form = GetHintForm()
 
 def get_hint(payload):
     """Вывод формы с запросом спринта/контеста/задачи"""
     slack_id = payload['user']['id']
 
     if payload['type'] == 'block_actions':
-        hint_form = GetHintForm()
-
         if payload.get('view'):
             if payload['view'].get('callback_id') == 'get-hint-form':
                 client.views_update(view=hint_form(payload),
                                     view_id=payload['view']['id'])
-                return
-
-        client.views_open(trigger_id=payload['trigger_id'],
+        else:
+            client.views_open(trigger_id=payload['trigger_id'],
                           view=hint_form(payload))
-        return
+
 
     if payload['type'] == 'view_submission' and 'block-hint' in payload['view']['state']['values'].keys():
-        hint_id = payload['view']['state']['values']['block-hint']['get-hint-complete']['selected_option']['value']
+        hint_id = payload['view']['state']['values']['block-hint']['get-form-tips-complete']['selected_option']['value']
         hint = Hint.objects.get(id=hint_id)
-        logger.info(hint)
         client.chat_postMessage(channel=f'@{slack_id}', text=f'{hint}')
-        return
 
-    client.chat_postMessage(channel=f'@{slack_id}',
-                            blocks=user_greeting(slack_id))
 
+    if payload['type'] == 'view_submission' and 'block-test' in payload['view']['state']['values'].keys():
+        test_id = payload['view']['state']['values']['block-test']['get-form-tips-complete']['selected_option']['value']
+        test = Test.objects.get(id=test_id)
+        student = Student.objects.get(slack_id=slack_id)
+        restriction, _ = Restriction.objects.get_or_create(user=student, problem=test.problem, contest=test.problem.contest)
+        if UserTestPair.objects.filter(user=student, test=test).exists() or restriction.is_in_limit():
+            client.chat_postMessage(channel=f'@{slack_id}', text=f'волобуев вот ваш test#{test.id}, ')
+            slack_send_file(slack_id, test.input_file, filename=f'test{test.id}-input.txt', title='Входные данные')
+            slack_send_file(slack_id, test.output_file, filename=f'test{test.id}-output.txt', title='Ответ')
+            _, new_get_test = UserTestPair.objects.get_or_create(user=student, test=test)
+            if new_get_test:
+                restriction.request_counter += 1
+                restriction.save()
+        else:
+            client.chat_postMessage(channel=f'@{slack_id}', text=f'волохуев ваш лимит подсказок исчерпан')
+
+    return HttpResponse('', 200)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class OnInteractive(View):
@@ -61,14 +71,21 @@ class OnInteractive(View):
             if button == 'click_me_register':
                 response = user_registration(payload)
 
-            if button == 'click_me_hint' or payload.get('view').get('callback_id') == 'get-hint-form':
+            if button == 'click_me_hint' or 'click_me_test':
                 get_hint(payload)
+            if payload.get('view'):
+                if payload['view'].get('callback_id') == 'get-hint-form':
+                    get_hint(payload)
+
         if payload_type == 'view_submission':
             callback_id = payload['view']['callback_id']
             if callback_id == 'get-hint-form':
-                get_hint(payload)
+                response = get_hint(payload)
             if callback_id == 'register-form':
                 response = user_registration(payload)
+
+        else:
+            return HttpResponse('', 200)
 
         return response
 
@@ -121,8 +138,43 @@ class Select(View):
 
     def post(self, request):
         selector = json.loads(request.POST.get('payload'))
-        if selector['block_id'] == 'specialty':
+        logger.info(f'###i,m selector: {selector}')
+        options = []
+        blocks = dict()
+        if selector.get('block_id') == 'specialty':
             objects_list = Specialty.objects.all()
+            options = options_generator(objects_list)
+
+        for num_block, block in enumerate(selector['view']['blocks']):
+            if block['block_id'].startswith('block-'):
+                if selector['view']['blocks'][num_block].get('accessory'):
+                    if selector['view']['blocks'][num_block]['accessory'].get('initial_option'):
+                        blocks[block['block_id'][6:]] = selector['view']['blocks'][num_block]['accessory']['initial_option']['value']
+
+        if selector.get('block_id') == 'block-sprint':
+            objects_list = Sprint.objects.all()
+            options = options_generator(objects_list)
+
+        if selector.get('block_id') == 'block-contest':
+            sprint = Sprint.objects.get(id=blocks['sprint'])
+            objects_list = sprint.contest.all()
+            options = options_generator(objects_list)
+
+        if selector.get('block_id') == 'block-problem':
+            logger.info('hey--we there')
+            logger.info(blocks)
+            contest = Contest.objects.get(id=blocks['contest'])
+            objects_list = contest.problem.all()
+            options = options_generator(objects_list)
+
+        if selector.get('block_id') == 'block-hint':
+            problem = Problem.objects.get(id=blocks['problem'])
+            objects_list = problem.hint.all()
+            options = options_generator(objects_list)
+
+        if selector.get('block_id') == 'block-test':
+            problem = Problem.objects.get(id=blocks['problem'])
+            objects_list = problem.test.all()
             options = options_generator(objects_list)
 
         return JsonResponse({"options": options}, safe=False)

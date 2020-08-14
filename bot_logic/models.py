@@ -100,10 +100,7 @@ class Problem(models.Model):
         verbose_name_plural = 'Задачи'
 
     def __str__(self):
-        return (f'{self.sprint}'
-                f'{self.contest} '
-                f'{self.title}. '
-                f'{self.full_title}')
+        return f'{self.title}. {self.full_title}'
 
     @property
     def sprint(self):

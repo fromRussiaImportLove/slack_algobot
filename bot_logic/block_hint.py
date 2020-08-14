@@ -1,4 +1,4 @@
-from .models import Sprint, Contest, Problem, Hint, Student
+from .models import Sprint, Contest, Problem, Hint, Student, Test
 from logging import getLogger
 import json
 
@@ -15,7 +15,11 @@ class GetHintForm():
         'contest': 'Выберите контест',
         'problem': 'Выберите задачу',
         'hint': 'Доступные подсказки',
+        'test': 'Доступные тесты'
     }
+
+    # def __init__(self):
+    #     self.test_or_hint = None
 
     def __call__(self, payload=None):
         if payload:
@@ -24,6 +28,11 @@ class GetHintForm():
                 self.user = Student.objects.get(slack_id=payload['user']['id'])
                 spec = self.user.specialty
             if payload['actions'][0]['block_id'] == 'useractionblock':
+                if payload['actions'][0]['value'] == 'click_me_test':
+                    self.test_or_hint = 'test'
+                if payload['actions'][0]['value'] == 'click_me_hint':
+                    logger.info('### now type is hint')
+                    self.test_or_hint = 'hint'
                 return self.build_sprint()
             if payload['actions'][0]['block_id'] == 'block-sprint':
                 sprint_id = payload['actions'][0]['selected_option']['value']
@@ -33,7 +42,7 @@ class GetHintForm():
                 return self.build_problem(contest_id)
             if payload['actions'][0]['block_id'] == 'block-problem':
                 problem_id = payload['actions'][0]['selected_option']['value']
-                return self.build_hint(problem_id)
+                return self.build_test_or_hint(problem_id)
 
             raise Exception('not avilaible blocks in payload')
         raise Exception('payload is need')
@@ -67,30 +76,35 @@ class GetHintForm():
         ]
         return self.build_view(blocks)
 
-    def build_hint(self, problem_id):
+    def build_test_or_hint(self, problem_id):
         problem = Problem.objects.get(id=problem_id)
         contest = problem.contest
         sprint = contest.sprint.get(specialty=self.user.specialty)
         problems = contest.problem.all()
         contests = sprint.contest.all()
         sprints = Sprint.objects.all()
-        hints = problem.hint.all()
+        if self.test_or_hint == 'hint':
+            tips = problem.hint.all()
+        else:
+            tips = problem.test.all()
 
         blocks = [
             self.build_block(sprints, sprint),
             self.build_block(contests, contest),
             self.build_block(problems, problem),
-            self.build_block(hints)
+            self.build_block(tips)
         ]
 
         return self.build_view(blocks)
+
 
     def get_model(self, section):
         models = {
             'sprint': Sprint,
             'contest': Contest,
             'problem': Problem,
-            'hint': Hint
+            'hint': Hint,
+            'tips': Test
         }
 
         return models[section]
@@ -104,22 +118,32 @@ class GetHintForm():
         """
 
         section = queryset.model._meta.model_name
-        section_type = 'input' if section == 'hint' else 'section'
+        section_type = 'input' if section in ('hint', 'test') else 'section'
 
         block = {
                 "block_id": f'block-{section}',
                 "type": section_type,
         }
 
+        # elems = {
+        #             "type": "static_select",
+        #             "placeholder": {
+        #                 "type": "plain_text",
+        #                 "text": self.TEXT_GET_ITEM[section],
+        #             },
+        #             "options": [{"text": {"type": "plain_text", "text": f"{obj}"},
+        #                          "value": f"{obj.id}"} for obj in queryset]
+        #         }
+
         elems = {
-                    "type": "static_select",
-                    "placeholder": {
-                        "type": "plain_text",
-                        "text": self.TEXT_GET_ITEM[section],
-                    },
-                    "options": [{"text": {"type": "plain_text", "text": f"{obj}"},
-                                 "value": f"{obj.id}"} for obj in queryset]
-                }
+                "type": "external_select",
+                "min_query_length": 0,
+                "action_id": "0",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": self.TEXT_GET_ITEM[section]
+                },
+        }
 
         if section_type == 'section':
             logger.info(elems)
@@ -131,7 +155,7 @@ class GetHintForm():
 
         if section_type == 'input':
             block["element"] = elems
-            block["element"]["action_id"] = 'get-hint-complete'
+            block["element"]["action_id"] = 'get-form-tips-complete'
             block["label"] = {
                     "type": "plain_text",
                     "text": f'{section}',
