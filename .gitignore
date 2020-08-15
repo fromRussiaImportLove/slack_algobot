@@ -130,5 +130,4 @@ dmypy.json
 
 tests_files/
 .vscode/
-migrations/
 media/

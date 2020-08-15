@@ -1,8 +1,6 @@
-from .models import Sprint, Contest, Problem, Hint, Student, Test
-from logging import getLogger
 import json
 
-logger = getLogger(__name__)
+from .models import Contest, Hint, Problem, Sprint, Student, Test
 
 
 class GetHintForm():
@@ -10,6 +8,7 @@ class GetHintForm():
     TEXT_TITLE = 'Выберите задачу'
     TEXT_SUBMIT = 'Отправить'
     TEXT_CLOSE = 'Отменить'
+
     TEXT_GET_ITEM = {
         'sprint': 'Выберите спринт',
         'contest': 'Выберите контест',
@@ -18,28 +17,26 @@ class GetHintForm():
         'test': 'Доступные тесты'
     }
 
-    # def __init__(self):
-    #     self.test_or_hint = None
-
     def __call__(self, payload=None):
         if payload:
-            logger.info('in class, we are ###', payload)
             if payload.get('user'):
                 self.user = Student.objects.get(slack_id=payload['user']['id'])
-                spec = self.user.specialty
+
             if payload['actions'][0]['block_id'] == 'useractionblock':
                 if payload['actions'][0]['value'] == 'click_me_test':
                     self.test_or_hint = 'test'
                 if payload['actions'][0]['value'] == 'click_me_hint':
-                    logger.info('### now type is hint')
                     self.test_or_hint = 'hint'
                 return self.build_sprint()
+
             if payload['actions'][0]['block_id'] == 'block-sprint':
                 sprint_id = payload['actions'][0]['selected_option']['value']
                 return self.build_contest(sprint_id)
+
             if payload['actions'][0]['block_id'] == 'block-contest':
                 contest_id = payload['actions'][0]['selected_option']['value']
                 return self.build_problem(contest_id)
+
             if payload['actions'][0]['block_id'] == 'block-problem':
                 problem_id = payload['actions'][0]['selected_option']['value']
                 return self.build_test_or_hint(problem_id)
@@ -83,6 +80,7 @@ class GetHintForm():
         problems = contest.problem.all()
         contests = sprint.contest.all()
         sprints = Sprint.objects.all()
+
         if self.test_or_hint == 'hint':
             tips = problem.hint.all()
         else:
@@ -96,7 +94,6 @@ class GetHintForm():
         ]
 
         return self.build_view(blocks)
-
 
     def get_model(self, section):
         models = {
@@ -112,7 +109,8 @@ class GetHintForm():
     def build_block(self, queryset, init=None):
         """
         Строит блок для формы
-        :param queryset: набор объектов для выпадающего меню соотв. типа (спринт, контест, задача)
+        :param queryset: набор объектов для выпадающего меню соотв. типа
+        (спринт, контест, задача)
         :param init: номер изначально выбранного объекта
         :return: словарь с блоком
         """
@@ -125,16 +123,6 @@ class GetHintForm():
                 "type": section_type,
         }
 
-        # elems = {
-        #             "type": "static_select",
-        #             "placeholder": {
-        #                 "type": "plain_text",
-        #                 "text": self.TEXT_GET_ITEM[section],
-        #             },
-        #             "options": [{"text": {"type": "plain_text", "text": f"{obj}"},
-        #                          "value": f"{obj.id}"} for obj in queryset]
-        #         }
-
         elems = {
                 "type": "external_select",
                 "min_query_length": 0,
@@ -146,7 +134,6 @@ class GetHintForm():
         }
 
         if section_type == 'section':
-            logger.info(elems)
             block["accessory"] = elems
             block["text"] = {
                     "type": 'mrkdwn',
@@ -162,7 +149,6 @@ class GetHintForm():
                 }
 
         if init:
-            # init = self.get_model(section).objects.get(id=init)
             block["accessory"]["initial_option"] = {
                 "text": {"type": "plain_text", "text": f"{init}"},
                 "value": f"{init.id}"

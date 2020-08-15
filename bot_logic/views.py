@@ -1,3 +1,5 @@
+import json
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse
@@ -5,18 +7,16 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 from slack import WebClient
-from .models import Hint, Contest, Problem, Test, UserTestPair
-from logging import getLogger
+
 from .block_hint import GetHintForm
-import json
-
-from .models import Specialty, Student, Sprint, Restriction
+from .models import (Contest, Hint, Problem, Restriction, Specialty, Sprint,
+                     Student, Test, UserTestPair)
 from .resources import anonymous_greeting, register_form, user_greeting
-from .services import options_generator, validation_generator, slack_send_file
+from .services import options_generator, slack_send_file, validation_generator
 
-logger = getLogger(__name__)
 client = WebClient(token=settings.SLACK_BOT_TOKEN)
 hint_form = GetHintForm()
+
 
 def get_hint(payload):
     """Вывод формы с запросом спринта/контеста/задачи"""
@@ -29,32 +29,50 @@ def get_hint(payload):
                                     view_id=payload['view']['id'])
         else:
             client.views_open(trigger_id=payload['trigger_id'],
-                          view=hint_form(payload))
+                              view=hint_form(payload))
 
+    if (payload['type'] == 'view_submission' and
+       'block-hint' in payload['view']['state']['values'].keys()):
 
-    if payload['type'] == 'view_submission' and 'block-hint' in payload['view']['state']['values'].keys():
-        hint_id = payload['view']['state']['values']['block-hint']['get-form-tips-complete']['selected_option']['value']
+        block = payload['view']['state']['values']['block-hint']
+        hint_id = block['get-form-tips-complete']['selected_option']['value']
         hint = Hint.objects.get(id=hint_id)
         client.chat_postMessage(channel=f'@{slack_id}', text=f'{hint}')
 
+    if (payload['type'] == 'view_submission' and
+       'block-test' in payload['view']['state']['values'].keys()):
 
-    if payload['type'] == 'view_submission' and 'block-test' in payload['view']['state']['values'].keys():
-        test_id = payload['view']['state']['values']['block-test']['get-form-tips-complete']['selected_option']['value']
+        block = payload['view']['state']['values']['block-test']
+        test_id = block['get-form-tips-complete']['selected_option']['value']
         test = Test.objects.get(id=test_id)
         student = Student.objects.get(slack_id=slack_id)
-        restriction, _ = Restriction.objects.get_or_create(user=student, problem=test.problem, contest=test.problem.contest)
-        if UserTestPair.objects.filter(user=student, test=test).exists() or restriction.is_in_limit():
-            client.chat_postMessage(channel=f'@{slack_id}', text=f'волобуев вот ваш test#{test.id}, ')
-            slack_send_file(slack_id, test.input_file, filename=f'test{test.id}-input.txt', title='Входные данные')
-            slack_send_file(slack_id, test.output_file, filename=f'test{test.id}-output.txt', title='Ответ')
-            _, new_get_test = UserTestPair.objects.get_or_create(user=student, test=test)
+        restriction, _ = Restriction.objects.get_or_create(
+            user=student, problem=test.problem, contest=test.problem.contest)
+
+        if (UserTestPair.objects.filter(user=student, test=test).exists() or
+           restriction.is_in_limit()):
+            client.chat_postMessage(
+                channel=f'@{slack_id}',
+                text=f'волобуев вот ваш test#{test.id}, ')
+            slack_send_file(
+                slack_id, test.input_file, filename=f'test{test.id}-input.txt',
+                title='Входные данные')
+            slack_send_file(
+                slack_id, test.output_file,
+                filename=f'test{test.id}-output.txt', title='Ответ')
+            _, new_get_test = UserTestPair.objects.get_or_create(
+                user=student, test=test)
+
             if new_get_test:
                 restriction.request_counter += 1
                 restriction.save()
         else:
-            client.chat_postMessage(channel=f'@{slack_id}', text=f'волохуев ваш лимит подсказок исчерпан')
+            client.chat_postMessage(
+                channel=f'@{slack_id}',
+                text='волохуев ваш лимит подсказок исчерпан')
 
     return HttpResponse('', 200)
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class OnInteractive(View):
@@ -64,14 +82,12 @@ class OnInteractive(View):
         payload = json.loads(request.POST.get('payload'))
         payload_type = payload['type']
 
-        logger.info(payload)
-
         if payload_type == 'block_actions':
             button = payload["actions"][0].get('value')
             if button == 'click_me_register':
                 response = user_registration(payload)
 
-            if button == 'click_me_hint' or 'click_me_test':
+            if button in ['click_me_hint', 'click_me_test']:
                 get_hint(payload)
             if payload.get('view'):
                 if payload['view'].get('callback_id') == 'get-hint-form':
@@ -138,7 +154,6 @@ class Select(View):
 
     def post(self, request):
         selector = json.loads(request.POST.get('payload'))
-        logger.info(f'###i,m selector: {selector}')
         options = []
         blocks = dict()
         if selector.get('block_id') == 'specialty':
@@ -147,9 +162,12 @@ class Select(View):
 
         for num_block, block in enumerate(selector['view']['blocks']):
             if block['block_id'].startswith('block-'):
-                if selector['view']['blocks'][num_block].get('accessory'):
-                    if selector['view']['blocks'][num_block]['accessory'].get('initial_option'):
-                        blocks[block['block_id'][6:]] = selector['view']['blocks'][num_block]['accessory']['initial_option']['value']
+                current_block = selector['view']['blocks'][num_block]
+                if current_block.get('accessory'):
+                    accessory = current_block['accessory']
+                    if accessory.get('initial_option'):
+                        initial_option = accessory['initial_option']
+                        blocks[block['block_id'][6:]] = initial_option['value']
 
         if selector.get('block_id') == 'block-sprint':
             objects_list = Sprint.objects.all()
@@ -161,8 +179,6 @@ class Select(View):
             options = options_generator(objects_list)
 
         if selector.get('block_id') == 'block-problem':
-            logger.info('hey--we there')
-            logger.info(blocks)
             contest = Contest.objects.get(id=blocks['contest'])
             objects_list = contest.problem.all()
             options = options_generator(objects_list)
