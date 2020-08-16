@@ -1,6 +1,7 @@
 import os
-from django.conf import settings
+
 import requests
+from django.conf import settings
 
 
 def options_generator(objects_list):
@@ -8,10 +9,11 @@ def options_generator(objects_list):
     Возвращает массив из набора опций'''
     options = []
     for num, item in enumerate(objects_list):
+        text = str(num+1) if item._meta.model_name == 'hint' else str(item)
         option = {
             "text": {
                 "type": "plain_text",
-                "text": str(num+1) if item._meta.model_name == 'hint' else str(item)
+                "text": text
             },
             "value": str(item.pk)
         }
@@ -39,22 +41,22 @@ def slack_send_file(channel, path, **kwargs):
     if os.path.exists(file_path):
         with open(file_path, 'rb') as fh:
             files = {'file': fh}
-            #В словаре date обязательные поля только token и channels
+            # В словаре date обязательные поля только token и channels
             data = {
                 "token": settings.SLACK_BOT_TOKEN,
-                "channels": [channel,],
-                #"filename": "test.doc",
-                #"initial_comment": "Держи файлик с исходными данными *Теста 1*.\nУ тебя осталось *2* подсказки.\nУдачного обучения!",
-                #"title": "ТЕСТ 1",
+                "channels": [channel, ],
+                # "filename": "test.doc",
+                # "initial_comment":"Держи файлик с исходными данными *Теста 1*
+                # \nУ тебя осталось *2* подсказки.\nУдачного обучения!",
+                # "title": "ТЕСТ 1",
             }
-            #Если мы передадим в функцию дополнительные именованные аргументы, они будут включены в словарь
+            # Если мы передадим в функцию дополнительные именованные аргументы,
+            # они будут включены в словарь
             data.update(kwargs)
 
-            response = requests.post(
-                url="https://slack.com/api/files.upload",
-                files=files,
-                data=data
-            )
+            requests.post(url="https://slack.com/api/files.upload",
+                          files=files,
+                          data=data)
 
             '''Можем тут распечатать ответ слака на запрос
                Если есть ошибки, они будут в ответе

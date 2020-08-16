@@ -18,9 +18,6 @@ class GetHintForm():
         'test': 'Доступные тесты'
     }
 
-    # def __init__(self):
-    #     self.test_or_hint = None
-
     def __call__(self, payload=None):
         """
         Вызов объекта класса, который принимает payload.
@@ -38,18 +35,22 @@ class GetHintForm():
         if payload:
             if payload.get('user'):
                 self.user = Student.objects.get(slack_id=payload['user']['id'])
+
             if payload['actions'][0]['block_id'] == 'useractionblock':
                 if payload['actions'][0]['value'] == 'click_me_test':
                     self.test_or_hint = 'test'
                 if payload['actions'][0]['value'] == 'click_me_hint':
                     self.test_or_hint = 'hint'
                 return self.build_sprint()
+
             if payload['actions'][0]['block_id'] == 'block-sprint':
                 sprint_id = payload['actions'][0]['selected_option']['value']
                 return self.build_contest(sprint_id)
+
             if payload['actions'][0]['block_id'] == 'block-contest':
                 contest_id = payload['actions'][0]['selected_option']['value']
                 return self.build_problem(contest_id)
+
             if payload['actions'][0]['block_id'] == 'block-problem':
                 problem_id = payload['actions'][0]['selected_option']['value']
                 return self.build_test_or_hint(problem_id)
@@ -92,6 +93,7 @@ class GetHintForm():
         problems = contest.problem.all()
         contests = sprint.contest.all()
         sprints = Sprint.objects.all()
+
         if self.test_or_hint == 'hint':
             tips = problem.hint.all()
         else:
@@ -109,7 +111,8 @@ class GetHintForm():
     def build_block(self, queryset, init=None):
         """
         Строит блок для формы
-        :param queryset: набор объектов для выпадающего меню соотв. типа (спринт, контест, задача)
+        :param queryset: набор объектов для выпадающего меню соотв. типа
+        (спринт, контест, задача)
         :param init: изначально выбранный объект
         :return: словарь с блоком (block-object)
         """
@@ -133,7 +136,6 @@ class GetHintForm():
         }
 
         if section_type == 'section':
-            logger.info(elems)
             block["accessory"] = elems
             block["text"] = {
                     "type": 'mrkdwn',
