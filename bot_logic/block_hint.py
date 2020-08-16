@@ -22,16 +22,26 @@ class GetHintForm():
     #     self.test_or_hint = None
 
     def __call__(self, payload=None):
+        """
+        Вызов объекта класса, который принимает payload.
+        По пути разбирает какой-именно блок запрашивается и перенаправляет вызов на
+        внешний ввод (external_input), чтобы получить набор опций (объекты в раскр. списке)
+        Логика выбора построения блока: если на входе первоначальный блок, значит строим спринты
+        Если на входе блок с построенным спринтом, значит надо строить контесты и тд.
+
+        На выходе возвращает json, на основе которого рисуется форма.
+
+        :param payload: response from slack
+        :return: json
+        """
+
         if payload:
-            logger.info('in class, we are ###', payload)
             if payload.get('user'):
                 self.user = Student.objects.get(slack_id=payload['user']['id'])
-                spec = self.user.specialty
             if payload['actions'][0]['block_id'] == 'useractionblock':
                 if payload['actions'][0]['value'] == 'click_me_test':
                     self.test_or_hint = 'test'
                 if payload['actions'][0]['value'] == 'click_me_hint':
-                    logger.info('### now type is hint')
                     self.test_or_hint = 'hint'
                 return self.build_sprint()
             if payload['actions'][0]['block_id'] == 'block-sprint':
@@ -48,7 +58,6 @@ class GetHintForm():
         raise Exception('payload is need')
 
     def build_sprint(self):
-        '''Строим спринты'''
         sprints = Sprint.objects.all()
         blocks = [self.build_block(sprints)]
         return self.build_view(blocks)
@@ -97,24 +106,12 @@ class GetHintForm():
 
         return self.build_view(blocks)
 
-
-    def get_model(self, section):
-        models = {
-            'sprint': Sprint,
-            'contest': Contest,
-            'problem': Problem,
-            'hint': Hint,
-            'tips': Test
-        }
-
-        return models[section]
-
     def build_block(self, queryset, init=None):
         """
         Строит блок для формы
         :param queryset: набор объектов для выпадающего меню соотв. типа (спринт, контест, задача)
-        :param init: номер изначально выбранного объекта
-        :return: словарь с блоком
+        :param init: изначально выбранный объект
+        :return: словарь с блоком (block-object)
         """
 
         section = queryset.model._meta.model_name
@@ -124,16 +121,6 @@ class GetHintForm():
                 "block_id": f'block-{section}',
                 "type": section_type,
         }
-
-        # elems = {
-        #             "type": "static_select",
-        #             "placeholder": {
-        #                 "type": "plain_text",
-        #                 "text": self.TEXT_GET_ITEM[section],
-        #             },
-        #             "options": [{"text": {"type": "plain_text", "text": f"{obj}"},
-        #                          "value": f"{obj.id}"} for obj in queryset]
-        #         }
 
         elems = {
                 "type": "external_select",
@@ -162,7 +149,6 @@ class GetHintForm():
                 }
 
         if init:
-            # init = self.get_model(section).objects.get(id=init)
             block["accessory"]["initial_option"] = {
                 "text": {"type": "plain_text", "text": f"{init}"},
                 "value": f"{init.id}"
@@ -171,13 +157,14 @@ class GetHintForm():
         return block
 
     def build_view(self, blocks):
+        TEXT_TYPE_FORM = 'Подказка: ' if self.test_or_hint == 'hint' else 'Тест: '
 
         view = {
             "callback_id": self.CALLBACK_ID,
             "type": "modal",
             "title": {
                 "type": "plain_text",
-                "text": self.TEXT_TITLE,
+                "text": TEXT_TYPE_FORM + self.TEXT_TITLE,
             },
             "submit": {
                 "type": "plain_text",
