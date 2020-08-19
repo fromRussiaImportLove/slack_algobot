@@ -131,3 +131,6 @@ dmypy.json
 tests_files/
 .vscode/
 media/
+db.sqlite3_back
+answer.json
+**/migrations/
