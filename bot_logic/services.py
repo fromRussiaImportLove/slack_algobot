@@ -1,15 +1,19 @@
 import os
+import json
 
 import requests
 from django.conf import settings
 
 
-def options_generator(objects_list):
+def options_generator(objects_list, slack_id=None):
     '''Генератор списка опций. На вход принимает QuerySet из объектов.
     Возвращает массив из набора опций'''
     options = []
-    for num, item in enumerate(objects_list):
-        text = str(num+1) if item._meta.model_name == 'hint' else str(item)
+    for item in objects_list:
+        text = str(item)
+        # Получаем текст из метода get_hint если есть аргумент slack_id
+        if slack_id is not None:
+            text = str(item.get_hint(slack_id))
         option = {
             "text": {
                 "type": "plain_text",
@@ -28,7 +32,7 @@ def validation_generator(errors):
     response = {
         "response_action": "errors",
         "errors": errors
-        }
+    }
     return response
 
 
@@ -62,3 +66,9 @@ def slack_send_file(channel, path, **kwargs):
                Если есть ошибки, они будут в ответе
                print(f" {response.status_code}: {response.text}" )
             '''
+
+
+def send_to_response_url(url):
+    data = {"text": 'Тестим фичу', }
+    response = requests.post(url=url, data=json.dumps(data))
+    print(f" {response.status_code}: {response.text}")

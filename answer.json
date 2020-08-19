@@ -1,0 +1,89 @@
+{
+  "type": "block_actions",
+  "user": {
+    "id": "U017339UE6A",
+    "username": "yarazny",
+    "name": "yarazny",
+    "team_id": "T017G0DLWKW"
+  },
+  "api_app_id": "A018MH1B6KA",
+  "token": "grWmcn7iqVnc5xSYnxjZFOW2",
+  "container": {
+    "type": "message",
+    "message_ts": "1596115078.001500",
+    "channel_id": "C017NDB3W81",
+    "is_ephemeral": false
+  },
+  "trigger_id": "1283060273718.1254013710676.6ac588fde0cc853b01c929caf87db544",
+  "team": {
+    "id": "T017G0DLWKW",
+    "domain": "slackbotbuildersgroup"
+  },
+  "channel": {
+    "id": "C017NDB3W81",
+    "name": "slack-bot"
+  },
+  "message": {
+    "bot_id": "B017H0WQ2AK",
+    "type": "message",
+    "text": "Привет! Чем могу помочь? Выбирай с умом",
+    "user": "U018ABQ8RL1",
+    "ts": "1596115078.001500",
+    "team": "T017G0DLWKW",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "zxki",
+        "text": {
+          "type": "plain_text",
+          "text": "Привет! Чем могу помочь? Выбирай с умом",
+          "emoji": true
+        }
+      },
+      {
+        "type": "actions",
+        "block_id": "actionblock1",
+        "elements": [
+          {
+            "type": "button",
+            "action_id": "button1",
+            "text": {
+              "type": "plain_text",
+              "text": "Хочу тест",
+              "emoji": true
+            },
+            "style": "danger",
+            "value": "click_me_test"
+          },
+          {
+            "type": "button",
+            "action_id": "button2",
+            "text": {
+              "type": "plain_text",
+              "text": "Хочу подсказку",
+              "emoji": true
+            },
+            "style": "primary",
+            "value": "click_me_hint"
+          }
+        ]
+      }
+    ]
+  },
+  "response_url": "https://hooks.slack.com/actions/T017G0DLWKW/1313630960208/vyR7ycU4eeSQEwTcHSII9UD4",
+  "actions": [
+    {
+      "action_id": "button1",
+      "block_id": "actionblock1",
+      "text": {
+        "type": "plain_text",
+        "text": "Хочу тест",
+        "emoji": true
+      },
+      "value": "click_me_test",
+      "style": "danger",
+      "type": "button",
+      "action_ts": "1596908137.187111"
+    }
+  ]
+}
