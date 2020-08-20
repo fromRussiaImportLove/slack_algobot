@@ -208,3 +208,18 @@ class UserHintPair(models.Model):
     class Meta:
         verbose_name = 'Запрошенная студентом подсказка'
         verbose_name_plural = 'Запрошенные студентами подсказки'
+
+
+class ResponseTasks(models.Model):
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE,
+        related_name='response_task_student', verbose_name='Студент')
+    test = models.ForeignKey(
+        Test, on_delete=models.CASCADE,
+        related_name='response_task_test', verbose_name='Тест')
+    created = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+
+    class Meta:
+        verbose_name = 'Задача'
+        verbose_name_plural = 'Задачи(response_url)'
+        

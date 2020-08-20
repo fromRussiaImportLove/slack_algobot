@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from .models import (Contest, Faculty, Hint, Problem, Restriction, Specialty,
-                     Sprint, Student, Test, UserTestPair, UserHintPair)
+                     Sprint, Student, Test, UserTestPair, UserHintPair, ResponseTasks)
 
 
 class FacultyAdmin(admin.ModelAdmin):
@@ -70,6 +70,11 @@ class UserHintPairAdmin(admin.ModelAdmin):
     list_filter = ('hint', )
 
 
+class ResponseTasksAdmin(admin.ModelAdmin):
+    list_display = ('id', 'student', 'test', 'created')
+    search_fields = ('student__first_name', 'student__last_name')
+
+
 admin.site.register(Sprint, SprintAdmin)
 admin.site.register(Contest, ContestAdmin)
 admin.site.register(Problem, ProblemAdmin)
@@ -81,3 +86,4 @@ admin.site.register(Student, StudentAdmin)
 admin.site.register(Faculty, FacultyAdmin)
 admin.site.register(Specialty, SpecialtyAdmin)
 admin.site.register(UserHintPair, UserHintPairAdmin)
+admin.site.register(ResponseTasks, ResponseTasksAdmin)

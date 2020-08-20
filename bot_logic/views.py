@@ -11,7 +11,7 @@ from slack import WebClient
 
 from .block_hint import GetHintForm
 from .models import (Contest, Hint, Problem, Restriction, Specialty, Sprint,
-                     Student, Test, UserTestPair, UserHintPair)
+                     Student, Test, UserTestPair, UserHintPair, ResponseTasks)
 from .resources import anonymous_greeting, register_form, user_greeting
 from .services import options_generator, slack_send_file, validation_generator
 
@@ -61,30 +61,9 @@ def get_hint(payload):
         test_id = block['get-form-tips-complete']['selected_option']['value']
         test = Test.objects.get(id=test_id)
         student = Student.objects.get(slack_id=slack_id)
-        restriction, _ = Restriction.objects.get_or_create(
-            user=student, problem=test.problem, contest=test.problem.contest)
-
-        if (UserTestPair.objects.filter(user=student, test=test).exists() or
-                restriction.is_in_limit()):
-            client.chat_postMessage(
-                channel=f'@{slack_id}',
-                text=f'волобуев вот ваш test#{test.id}, ')
-            slack_send_file(
-                slack_id, test.input_file, filename=f'test{test.id}-input.txt',
-                title='Входные данные')
-            slack_send_file(
-                slack_id, test.output_file,
-                filename=f'test{test.id}-output.txt', title='Ответ')
-            _, new_get_test = UserTestPair.objects.get_or_create(
-                user=student, test=test)
-
-            if new_get_test:
-                restriction.request_counter += 1
-                restriction.save()
-        else:
-            client.chat_postMessage(
-                channel=f'@{slack_id}',
-                text='волохуев ваш лимит подсказок исчерпан')
+        #Создаем задачу для фоновой обработки
+        new_task = ResponseTasks.objects.create(student=student, test=test)
+        
 
     return HttpResponse('', 200)
 
