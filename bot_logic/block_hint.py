@@ -54,7 +54,6 @@ class GetHintForm():
         sprints = Sprint.objects.all()
         sprint = Sprint.objects.get(id=sprint_id)
         contests = sprint.contest.all()
-
         blocks = [self.build_block(sprints, sprint),
                   self.build_block(contests)]
         return self.build_view(blocks)
@@ -156,6 +155,7 @@ class GetHintForm():
 
         return block
 
+    
     def build_view(self, blocks):
 
         view = {
@@ -165,15 +165,15 @@ class GetHintForm():
                 "type": "plain_text",
                 "text": self.TEXT_TITLE,
             },
-            "submit": {
-                "type": "plain_text",
-                "text": self.TEXT_SUBMIT,
-            },
             "close": {
                 "type": "plain_text",
                 "text": self.TEXT_CLOSE,
             },
             "blocks": blocks
         }
-
+        if blocks[-1]['block_id'] in ('block-hint', 'block-test'):
+            view["submit"] = {
+                "type": "plain_text",
+                "text": self.TEXT_SUBMIT,
+            }
         return json.dumps(view)
