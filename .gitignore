@@ -133,6 +133,3 @@ tests_files/
 media/
 db.sqlite3_back
 answer.json
-**/migrations/**
-!**/migrations
-!**/migrations/__init__.py
