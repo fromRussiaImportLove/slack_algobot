@@ -2,6 +2,7 @@ import json
 
 from django.utils import timezone
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse
 from django.utils.decorators import method_decorator
@@ -31,19 +32,21 @@ def set_user_hints(slack_id, hint):
         user_hint.save(update_fields=["timestamp"])
 
 
-def check_student(slack_id: str) -> bool:
+def get_student(slack_id: str) -> 'QuerySet[Student]':
     #Проверяем, является ли пользователь зарегистрированным
-    if Student.objects.filter(slack_id=slack_id).exists():
-        return True
-
-    return False
+    try:
+        student = Student.objects.get(slack_id=slack_id)
+    except ObjectDoesNotExist:
+        return None
+    else:
+        return student
 
 
 def get_hint(payload):
     """Вывод формы с запросом спринта/контеста/задачи"""
     slack_id = payload['user']['id']
-    is_student = check_student(slack_id)
-    if not is_student:
+    student = get_student(slack_id)
+    if not student:
         client.chat_postMessage(channel=slack_id, blocks=anonymous_greeting)
         return HttpResponse('', 200)
 
@@ -72,7 +75,6 @@ def get_hint(payload):
         block = payload['view']['state']['values']['block-test']
         test_id = block['get-form-tips-complete']['selected_option']['value']
         test = Test.objects.get(id=test_id)
-        student = Student.objects.get(slack_id=slack_id)
         #Создаем задачу для фоновой обработки
         new_task = ResponseTasks.objects.create(student=student, test=test)
         
