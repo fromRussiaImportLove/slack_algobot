@@ -31,9 +31,21 @@ def set_user_hints(slack_id, hint):
         user_hint.save(update_fields=["timestamp"])
 
 
+def check_student(slack_id: str) -> bool:
+    #Проверяем, является ли пользователь зарегистрированным
+    if Student.objects.filter(slack_id=slack_id).exists():
+        return True
+
+    return False
+
+
 def get_hint(payload):
     """Вывод формы с запросом спринта/контеста/задачи"""
     slack_id = payload['user']['id']
+    is_student = check_student(slack_id)
+    if not is_student:
+        client.chat_postMessage(channel=slack_id, blocks=anonymous_greeting)
+        return HttpResponse('', 200)
 
     if payload['type'] == 'block_actions':
         if payload.get('view'):

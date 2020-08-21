@@ -1,19 +1,6 @@
 import json
-from slack import WebClient
 
-from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
 from .models import Contest, Hint, Problem, Sprint, Student, Test
-
-
-client = WebClient(token=settings.SLACK_BOT_TOKEN)
-
-
-def send_message(slack_id, text):
-    client.chat_postMessage(
-        channel=f"@{slack_id}",
-        text=text,
-    )
 
 
 class GetHintForm():
@@ -33,13 +20,8 @@ class GetHintForm():
     def __call__(self, payload=None):
         if payload:
             if payload.get('user'):
-                try:
-                    self.user = Student.objects.get(
-                        slack_id=payload['user']['id'])
-                except ObjectDoesNotExist:
-                    send_message(slack_id=payload['user'][
-                                 'id'], text='*Вы не зарегистрированы!* Пройдите регистрацию.')
-                    raise Exception('Пользователь не зарегистрирован')
+                self.user = Student.objects.get(
+                    slack_id=payload['user']['id'])
 
             if payload['actions'][0]['block_id'] == 'useractionblock':
                 if payload['actions'][0]['value'] == 'click_me_test':
