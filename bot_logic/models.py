@@ -175,7 +175,22 @@ class UserTestPair(models.Model):
     test = models.ForeignKey(
         Test, on_delete=models.CASCADE,
         related_name='user_test_pair', verbose_name='Тест')
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = 'Запрошенный студентом тест'
         verbose_name_plural = 'Запрошенные студентами тесты'
+
+
+class UserHintPair(models.Model):
+    user = models.ForeignKey(
+        Student, on_delete=models.CASCADE,
+        related_name='user_hint_pair', verbose_name='Студент')
+    hint = models.ForeignKey(
+        Hint, on_delete=models.CASCADE,
+        related_name='user_hint_pair', verbose_name='Подсказка')
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Запрошенная студентом подсказка'
+        verbose_name_plural = 'Запрошенные студентами подсказки'
