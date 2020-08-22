@@ -190,6 +190,7 @@ class UserTestPair(models.Model):
     test = models.ForeignKey(
         Test, on_delete=models.CASCADE,
         related_name='user_test_pair', verbose_name='Тест')
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = 'Запрошенный студентом тест'
@@ -217,9 +218,9 @@ class ResponseTasks(models.Model):
     test = models.ForeignKey(
         Test, on_delete=models.CASCADE,
         related_name='response_task_test', verbose_name='Тест')
-    created = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    created = models.DateTimeField(
+        auto_now_add=True, verbose_name='Дата создания')
 
     class Meta:
         verbose_name = 'Задача'
         verbose_name_plural = 'Задачи(response_url)'
-        

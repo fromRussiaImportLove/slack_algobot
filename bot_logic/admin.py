@@ -52,9 +52,15 @@ class RestrictionAdmin(admin.ModelAdmin):
 
 
 class UserTestPairAdmin(admin.ModelAdmin):
-    list_display = ('user', 'test', )
-    search_fields = ('user__first_name', 'user__last_name', )
+    list_display = ('user', 'test', 'timestamp')
+    search_fields = ('user__first_name', 'user__last_name')
     list_filter = ('test', )
+
+
+class UserHintPairAdmin(admin.ModelAdmin):
+    list_display = ('user', 'hint', 'timestamp')
+    search_fields = ('user__first_name', 'user__last_name')
+    list_filter = ('hint', )
 
 
 class StudentAdmin(admin.ModelAdmin):
@@ -86,4 +92,5 @@ admin.site.register(Student, StudentAdmin)
 admin.site.register(Faculty, FacultyAdmin)
 admin.site.register(Specialty, SpecialtyAdmin)
 admin.site.register(UserHintPair, UserHintPairAdmin)
+
 admin.site.register(ResponseTasks, ResponseTasksAdmin)
