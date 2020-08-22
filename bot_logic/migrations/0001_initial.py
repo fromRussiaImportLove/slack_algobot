@@ -49,14 +49,17 @@ class Migration(migrations.Migration):
                                         primary_key=True, serialize=False, verbose_name='ID')),
                 ('text', models.TextField(verbose_name='Текст подсказки')),
                 ('number', models.IntegerField(verbose_name='Номер подсказки')),
+
             ],
             options={
                 'verbose_name': 'Подсказка',
                 'verbose_name_plural': 'Подсказки',
+
                 'ordering': ['number'],
             },
         ),
         migrations.CreateModel(
+
 
             name='Problem',
             fields=[
@@ -152,6 +155,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='UserHintPair',
             fields=[
+
                 ('id', models.AutoField(auto_created=True,
                                         primary_key=True, serialize=False, verbose_name='ID')),
 
@@ -162,6 +166,7 @@ class Migration(migrations.Migration):
 
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
                                            related_name='user_hint_pair', to='bot_logic.Student', verbose_name='Студент')),
+
             ],
             options={
                 'verbose_name': 'Запрошенная студентом подсказка',
@@ -204,6 +209,7 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'Ограничения',
             },
         ),
+
         migrations.CreateModel(
             name='ResponseTasks',
             fields=[
@@ -241,6 +247,7 @@ class Migration(migrations.Migration):
                 'verbose_name': 'Подсказка',
                 'verbose_name_plural': 'Подсказки',
             },
+
         ),
         migrations.AddField(
 

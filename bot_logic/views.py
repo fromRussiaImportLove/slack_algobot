@@ -45,10 +45,12 @@ def get_student(slack_id: str) -> 'QuerySet[Student]':
 def get_hint(payload):
     """Вывод формы с запросом спринта/контеста/задачи"""
     slack_id = payload['user']['id']
+
     student = get_student(slack_id)
     if not student:
         client.chat_postMessage(channel=slack_id, blocks=anonymous_greeting)
         return HttpResponse('', 200)
+
 
     if payload['type'] == 'block_actions':
         if payload.get('view'):
@@ -121,6 +123,7 @@ class Event(View):
 
     def post(self, request):
         body = json.loads(request.body.decode('utf-8'))
+        
 
         if body.get('token') != settings.SLACK_VERIFY_TOKEN:
             return HttpResponse(status=403)
@@ -176,9 +179,12 @@ class Select(View):
                     if accessory.get('initial_option'):
                         initial_option = accessory['initial_option']
                         blocks[block['block_id'][6:]] = initial_option['value']
+                        print(blocks)
 
         if selector.get('block_id') == 'block-sprint':
-            objects_list = Sprint.objects.all()
+            user = Student.objects.get(slack_id=selector['user']['id'])
+            specialty = user.specialty
+            objects_list = Sprint.objects.filter(specialty=specialty)
             options = options_generator(objects_list)
 
         if selector.get('block_id') == 'block-contest':
