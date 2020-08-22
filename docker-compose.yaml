@@ -1,0 +1,16 @@
+version: '3.3'
+
+volumes:
+  algobot_data:
+
+services:
+  web:
+    build: .
+    restart: always
+    command: bash -c "service redis-server start && service supervisor start"
+    ports:
+      - "8000:8000"
+    volumes:
+      - algobot_data:/code
+    env_file:
+      - ./.env

@@ -1,0 +1,13 @@
+[Unit]
+Description=Celery Service
+After=network.target
+
+[Service]
+User=root
+Restart=no
+WorkingDirectory=/code
+ExecStart=celery -A djangocron worker -B -l INFO
+
+ 
+[Install]
+WantedBy=multi-user.target

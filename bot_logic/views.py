@@ -1,6 +1,8 @@
 import json
 
+from django.utils import timezone
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse
 from django.utils.decorators import method_decorator
@@ -10,7 +12,7 @@ from slack import WebClient
 
 from .block_hint import GetHintForm
 from .models import (Contest, Hint, Problem, Restriction, Specialty, Sprint,
-                     Student, Test, UserTestPair)
+                     Student, Test, UserTestPair, UserHintPair, ResponseTasks)
 from .resources import anonymous_greeting, register_form, user_greeting
 from .services import options_generator, slack_send_file, validation_generator
 
@@ -18,9 +20,38 @@ client = WebClient(token=settings.SLACK_BOT_TOKEN)
 hint_form = GetHintForm()
 
 
+def set_user_hints(slack_id, hint):
+    '''Проверяем брал ли данную подсказку конкретный пользователь.
+       Если не брал, фиксируем. Если брал - обновляем время
+    '''
+    student = Student.objects.get(slack_id=slack_id)
+    user_hint, created = UserHintPair.objects.get_or_create(
+        user=student, hint=hint)
+    if not created:
+        user_hint.timestamp = timezone.now()
+        user_hint.save(update_fields=["timestamp"])
+
+
+def get_student(slack_id: str) -> 'QuerySet[Student]':
+    #Проверяем, является ли пользователь зарегистрированным
+    try:
+        student = Student.objects.get(slack_id=slack_id)
+    except ObjectDoesNotExist:
+        return None
+    else:
+        return student
+
+
 def get_hint(payload):
     """Вывод формы с запросом спринта/контеста/задачи"""
     slack_id = payload['user']['id']
+
+    student = get_student(slack_id)
+    if not student:
+        client.chat_postMessage(channel=slack_id, blocks=anonymous_greeting)
+        return HttpResponse('', 200)
+
+
     if payload['type'] == 'block_actions':
         if payload.get('view'):
             if payload['view'].get('callback_id') == 'get-hint-form':
@@ -31,44 +62,24 @@ def get_hint(payload):
                               view=hint_form(payload))
 
     if (payload['type'] == 'view_submission' and
-       'block-hint' in payload['view']['state']['values'].keys()):
+            'block-hint' in payload['view']['state']['values'].keys()):
 
         block = payload['view']['state']['values']['block-hint']
         hint_id = block['get-form-tips-complete']['selected_option']['value']
         hint = Hint.objects.get(id=hint_id)
-        client.chat_postMessage(channel=f'@{slack_id}', text=f'{hint}')
+        # Создаем или обновляем данные о подсказках
+        set_user_hints(slack_id, hint)
+        client.chat_postMessage(channel=f'@{slack_id}', text=f'{hint.get_text()}')
 
     if (payload['type'] == 'view_submission' and
-       'block-test' in payload['view']['state']['values'].keys()):
+            'block-test' in payload['view']['state']['values'].keys()):
 
         block = payload['view']['state']['values']['block-test']
         test_id = block['get-form-tips-complete']['selected_option']['value']
         test = Test.objects.get(id=test_id)
-        student = Student.objects.get(slack_id=slack_id)
-        restriction, _ = Restriction.objects.get_or_create(
-            user=student, problem=test.problem, contest=test.problem.contest)
-
-        if (UserTestPair.objects.filter(user=student, test=test).exists() or
-           restriction.is_in_limit()):
-            client.chat_postMessage(
-                channel=f'@{slack_id}',
-                text=f'волобуев вот ваш test#{test.id}, ')
-            slack_send_file(
-                slack_id, test.input_file, filename=f'test{test.id}-input.txt',
-                title='Входные данные')
-            slack_send_file(
-                slack_id, test.output_file,
-                filename=f'test{test.id}-output.txt', title='Ответ')
-            _, new_get_test = UserTestPair.objects.get_or_create(
-                user=student, test=test)
-
-            if new_get_test:
-                restriction.request_counter += 1
-                restriction.save()
-        else:
-            client.chat_postMessage(
-                channel=f'@{slack_id}',
-                text='волохуев ваш лимит подсказок исчерпан')
+        #Создаем задачу для фоновой обработки
+        new_task = ResponseTasks.objects.create(student=student, test=test)
+        
 
     return HttpResponse('', 200)
 
@@ -189,7 +200,8 @@ class Select(View):
         if selector.get('block_id') == 'block-hint':
             problem = Problem.objects.get(id=blocks['problem'])
             objects_list = problem.hint.all()
-            options = options_generator(objects_list)
+            slack_id = selector['user']['id']
+            options = options_generator(objects_list, slack_id=slack_id)
 
         if selector.get('block_id') == 'block-test':
             problem = Problem.objects.get(id=blocks['problem'])

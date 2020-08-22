@@ -131,13 +131,28 @@ class Hint(models.Model):
         Problem, on_delete=models.CASCADE,
         related_name='hint', verbose_name='Задача')
     text = models.TextField(verbose_name='Текст подсказки')
+    number = models.IntegerField(verbose_name='Номер подсказки')
 
     class Meta:
+        unique_together = ('number', 'problem')
+        ordering = ["number"]
         verbose_name = 'Подсказка'
         verbose_name_plural = 'Подсказки'
 
     def __str__(self):
+        return str(self.number)
+
+    def get_text(self):
         return self.text
+
+    def get_hint(self, slack_id):
+        student = Student.objects.get(slack_id=slack_id)
+        if UserHintPair.objects.filter(hint=self, user=student).exists():
+            timestamp = UserHintPair.objects.get(
+                hint=self, user=student).timestamp.strftime('%d.%m.%Y %H:%M')
+            return f'{self.number} - Вы уже брали эту подсказку {timestamp}'
+
+        return self.number
 
 
 class Restriction(models.Model):
@@ -189,8 +204,23 @@ class UserHintPair(models.Model):
     hint = models.ForeignKey(
         Hint, on_delete=models.CASCADE,
         related_name='user_hint_pair', verbose_name='Подсказка')
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True, verbose_name='Дата')
 
     class Meta:
         verbose_name = 'Запрошенная студентом подсказка'
         verbose_name_plural = 'Запрошенные студентами подсказки'
+
+
+class ResponseTasks(models.Model):
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE,
+        related_name='response_task_student', verbose_name='Студент')
+    test = models.ForeignKey(
+        Test, on_delete=models.CASCADE,
+        related_name='response_task_test', verbose_name='Тест')
+    created = models.DateTimeField(
+        auto_now_add=True, verbose_name='Дата создания')
+
+    class Meta:
+        verbose_name = 'Задача'
+        verbose_name_plural = 'Задачи(response_url)'
