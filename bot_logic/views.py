@@ -33,7 +33,7 @@ def set_user_hints(slack_id, hint):
 
 
 def get_student(slack_id: str) -> 'QuerySet[Student]':
-    #Проверяем, является ли пользователь зарегистрированным
+    # Проверяем, является ли пользователь зарегистрированным
     try:
         student = Student.objects.get(slack_id=slack_id)
     except ObjectDoesNotExist:
@@ -50,7 +50,6 @@ def get_hint(payload):
     if not student:
         client.chat_postMessage(channel=slack_id, blocks=anonymous_greeting)
         return HttpResponse('', 200)
-
 
     if payload['type'] == 'block_actions':
         if payload.get('view'):
@@ -77,9 +76,9 @@ def get_hint(payload):
         block = payload['view']['state']['values']['block-test']
         test_id = block['get-form-tips-complete']['selected_option']['value']
         test = Test.objects.get(id=test_id)
-        #Создаем задачу для фоновой обработки
+        # Создаем задачу для фоновой обработки
+        client.chat_postMessage(channel=f'@{slack_id}', text=f':hourglass::hourglass::hourglass:')
         new_task = ResponseTasks.objects.create(student=student, test=test)
-        
 
     return HttpResponse('', 200)
 
@@ -123,7 +122,6 @@ class Event(View):
 
     def post(self, request):
         body = json.loads(request.body.decode('utf-8'))
-        
 
         if body.get('token') != settings.SLACK_VERIFY_TOKEN:
             return HttpResponse(status=403)

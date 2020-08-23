@@ -140,7 +140,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True,
                                         primary_key=True, serialize=False, verbose_name='ID')),
 
-                ('timestamp', models.DateTimeField(auto_now_add=True)),
+
 
                 ('test', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
                                            related_name='user_test_pair', to='bot_logic.Test', verbose_name='Тест')),
@@ -234,19 +234,11 @@ class Migration(migrations.Migration):
                                     related_name='hint', to='bot_logic.Problem', verbose_name='Задача'),
         ),
         migrations.AddField(
+            model_name='hint',
+            name='problem',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='hint', to='bot_logic.Problem', verbose_name='Задача'),
 
-            name='Hint',
-            fields=[
-                ('id', models.AutoField(auto_created=True,
-                                        primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.TextField(verbose_name='Текст подсказки')),
-                ('problem', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
-                                              related_name='hint', to='bot_logic.Problem', verbose_name='Задача')),
-            ],
-            options={
-                'verbose_name': 'Подсказка',
-                'verbose_name_plural': 'Подсказки',
-            },
 
         ),
         migrations.AddField(

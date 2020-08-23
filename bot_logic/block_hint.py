@@ -158,9 +158,8 @@ class GetHintForm():
 
         return block
 
-    
     def build_view(self, blocks):
-        TEXT_TYPE_FORM = 'Подказка: ' if self.test_or_hint == 'hint' else 'Тест: '
+        TEXT_TYPE_FORM = 'Совет: ' if self.test_or_hint == 'hint' else 'Тест: '
 
         view = {
             "callback_id": self.CALLBACK_ID,
