@@ -1,20 +1,19 @@
 import json
 
-from django.utils import timezone
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.http import HttpResponse, JsonResponse
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 from slack import WebClient
 
 from .block_hint import GetHintForm
-from .models import (Contest, Hint, Problem, Restriction, Specialty, Sprint,
-                     Student, Test, UserTestPair, UserHintPair, ResponseTasks)
+from .models import (Contest, Hint, Problem, ResponseTasks, Specialty, Sprint,
+                     Student, Test, UserHintPair)
 from .resources import anonymous_greeting, register_form, user_greeting
-from .services import options_generator, slack_send_file, validation_generator
+from .services import options_generator, validation_generator
 
 client = WebClient(token=settings.SLACK_BOT_TOKEN)
 hint_form = GetHintForm()
@@ -32,7 +31,7 @@ def set_user_hints(slack_id, hint):
         user_hint.save(update_fields=["timestamp"])
 
 
-def get_student(slack_id: str) -> 'QuerySet[Student]':
+def get_student(slack_id: str) -> Student:
     # Проверяем, является ли пользователь зарегистрированным
     try:
         student = Student.objects.get(slack_id=slack_id)
@@ -68,7 +67,8 @@ def get_hint(payload):
         hint = Hint.objects.get(id=hint_id)
         # Создаем или обновляем данные о подсказках
         set_user_hints(slack_id, hint)
-        client.chat_postMessage(channel=f'@{slack_id}', text=f'{hint.get_text()}')
+        client.chat_postMessage(channel=f'@{slack_id}',
+                                text=f'{hint.get_text()}')
 
     if (payload['type'] == 'view_submission' and
             'block-test' in payload['view']['state']['values'].keys()):
@@ -77,8 +77,9 @@ def get_hint(payload):
         test_id = block['get-form-tips-complete']['selected_option']['value']
         test = Test.objects.get(id=test_id)
         # Создаем задачу для фоновой обработки
-        client.chat_postMessage(channel=f'@{slack_id}', text=f':hourglass::hourglass::hourglass:')
-        new_task = ResponseTasks.objects.create(student=student, test=test)
+        client.chat_postMessage(channel=f'@{slack_id}',
+                                text=':hourglass::hourglass::hourglass:')
+        ResponseTasks.objects.create(student=student, test=test)
 
     return HttpResponse('', 200)
 
@@ -177,7 +178,6 @@ class Select(View):
                     if accessory.get('initial_option'):
                         initial_option = accessory['initial_option']
                         blocks[block['block_id'][6:]] = initial_option['value']
-                        print(blocks)
 
         if selector.get('block_id') == 'block-sprint':
             user = Student.objects.get(slack_id=selector['user']['id'])

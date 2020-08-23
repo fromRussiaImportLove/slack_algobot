@@ -1,8 +1,6 @@
-from .models import Sprint, Contest, Problem, Hint, Student, Test
-from logging import getLogger
 import json
 
-logger = getLogger(__name__)
+from .models import Contest, Problem, Sprint, Student
 
 
 class GetHintForm():
@@ -21,10 +19,11 @@ class GetHintForm():
     def __call__(self, payload=None):
         """
         Вызов объекта класса, который принимает payload.
-        По пути разбирает какой-именно блок запрашивается и перенаправляет вызов на
-        внешний ввод (external_input), чтобы получить набор опций (объекты в раскр. списке)
-        Логика выбора построения блока: если на входе первоначальный блок, значит строим спринты
-        Если на входе блок с построенным спринтом, значит надо строить контесты и тд.
+        По пути разбирает какой-именно блок запрашивается и перенаправляет
+        вызов на внешний ввод (external_input), чтобы получить набор опций
+        (объекты в раскр. списке). Логика выбора построения блока: если на
+        входе первоначальный блок, значит строим спринты. Если на входе блок с
+        построенным спринтом, значит надо строить контесты и тд.
 
         На выходе возвращает json, на основе которого рисуется форма.
 
@@ -45,14 +44,25 @@ class GetHintForm():
                 return self.build_sprint()
 
             if payload['actions'][0]['block_id'] == 'block-sprint':
-                sprint_id = payload['actions'][0]['selected_option']['value']
+                if payload['actions'][0]['selected_option'] is None:
+                    return self.build_sprint()
+                actions = payload['actions'][0]
+                sprint_id = actions['selected_option'].get('value')
                 return self.build_contest(sprint_id)
 
             if payload['actions'][0]['block_id'] == 'block-contest':
+                if payload['actions'][0]['selected_option'] is None:
+                    actions = payload['actions'][0]
+                    sprint_id = actions['initial_option']['value']
+                    return self.build_contest(sprint_id)
                 contest_id = payload['actions'][0]['selected_option']['value']
                 return self.build_problem(contest_id)
 
             if payload['actions'][0]['block_id'] == 'block-problem':
+                if payload['actions'][0]['selected_option'] is None:
+                    actions = payload['actions'][0]
+                    contest_id = actions['initial_option']['value']
+                    return self.build_problem(contest_id)
                 problem_id = payload['actions'][0]['selected_option']['value']
                 return self.build_test_or_hint(problem_id)
 
@@ -128,7 +138,6 @@ class GetHintForm():
         elems = {
             "type": "external_select",
             "min_query_length": 0,
-            "action_id": "0",
             "placeholder": {
                     "type": "plain_text",
                     "text": self.TEXT_GET_ITEM[section]
