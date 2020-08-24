@@ -1,5 +1,7 @@
 from django.db import models
 from django.db.models import Sum
+from django.conf import settings
+from pytz import timezone
 
 
 class Faculty(models.Model):
@@ -148,8 +150,10 @@ class Hint(models.Model):
     def get_hint(self, slack_id):
         student = Student.objects.get(slack_id=slack_id)
         if UserHintPair.objects.filter(hint=self, user=student).exists():
+            tz = settings.TIME_ZONE
             timestamp = UserHintPair.objects.get(
-                hint=self, user=student).timestamp.strftime('%d.%m.%Y %H:%M')
+                hint=self, user=student).timestamp.astimezone(timezone(tz))
+            timestamp = timestamp.strftime('%d.%m.%Y %H:%M')    
             return f'{self.number} - Вы уже брали эту подсказку {timestamp}'
 
         return self.number
