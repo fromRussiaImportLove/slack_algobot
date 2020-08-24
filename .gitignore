@@ -131,3 +131,4 @@ dmypy.json
 tests_files/
 .vscode/
 media/
+bot_logic/migrations/

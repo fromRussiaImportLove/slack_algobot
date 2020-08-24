@@ -175,7 +175,7 @@ class UserTestPair(models.Model):
     test = models.ForeignKey(
         Test, on_delete=models.CASCADE,
         related_name='user_test_pair', verbose_name='Тест')
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
 
     class Meta:
         verbose_name = 'Запрошенный студентом тест'
@@ -189,7 +189,7 @@ class UserHintPair(models.Model):
     hint = models.ForeignKey(
         Hint, on_delete=models.CASCADE,
         related_name='user_hint_pair', verbose_name='Подсказка')
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
 
     class Meta:
         verbose_name = 'Запрошенная студентом подсказка'

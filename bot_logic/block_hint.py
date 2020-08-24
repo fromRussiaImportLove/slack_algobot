@@ -115,8 +115,9 @@ class GetHintForm():
         :return: словарь с блоком
         """
 
-        section = queryset.model._meta.model_name
+        section = queryset.model._meta.model_name # берет название модели
         section_type = 'input' if section in ('hint', 'test') else 'section'
+        section_text = queryset.model._meta.verbose_name
 
         block = {
                 "block_id": f'block-{section}',
@@ -145,7 +146,7 @@ class GetHintForm():
             block["element"]["action_id"] = 'get-form-tips-complete'
             block["label"] = {
                     "type": "plain_text",
-                    "text": f'{section}',
+                    "text": f'{section_text}',
                 }
 
         if init:
