@@ -8,7 +8,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 from slack import WebClient
-
+from .tasks import send_to_response_url
 from .block_hint import GetHintForm
 from .models import (Contest, Hint, Problem, ResponseTasks, Specialty, Sprint,
                      Student, Test, UserHintPair)
@@ -77,9 +77,9 @@ def get_hint(payload):
         test_id = block['get-form-tips-complete']['selected_option']['value']
         test = Test.objects.get(id=test_id)
         # Создаем задачу для фоновой обработки
-        client.chat_postMessage(channel=f'@{slack_id}',
-                                text=':hourglass::hourglass::hourglass:')
         ResponseTasks.objects.create(student=student, test=test)
+        #Запускаяем здачу в фоне
+        send_to_response_url.delay()
 
     return HttpResponse('', 200)
 

@@ -2,7 +2,7 @@ from __future__ import absolute_import, unicode_literals
 
 from datetime import timedelta
 
-from celery.task import periodic_task
+from algobot.celery import app
 from django.conf import settings
 from slack import WebClient
 
@@ -12,7 +12,7 @@ from .services import slack_send_file
 client = WebClient(token=settings.SLACK_BOT_TOKEN)
 
 
-@periodic_task(run_every=timedelta(seconds=10), name='send_to_response_url')
+@app.task
 def send_to_response_url():
     '''
        Каждые 10 секунд проверяем есть ли задачи по отправке тестов
