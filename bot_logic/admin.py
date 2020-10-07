@@ -1,7 +1,8 @@
 from django.contrib import admin
 
-from .models import (Contest, Hint, Problem, Restriction, Sprint, Test, User,
-                     UserTestPair, Faculty, Specialty)
+from .models import (Contest, Faculty, Hint, Problem, ResponseTasks,
+                     Restriction, Specialty, Sprint, Student, Test,
+                     UserHintPair, UserTestPair)
 
 
 class FacultyAdmin(admin.ModelAdmin):
@@ -16,21 +17,21 @@ class SpecialtyAdmin(admin.ModelAdmin):
 
 
 class SprintAdmin(admin.ModelAdmin):
-    list_display = ('sprint_number', 'sprint_title', 'faculty', )
+    list_display = ('number', 'title', 'specialty', )
     search_fields = ('number', 'title', )
 
 
 class ContestAdmin(admin.ModelAdmin):
-    list_display = ('contest_number', 'contest_title', 'test_limit', )
-    search_fields = ('contest_number', 'contest_title', )
-    list_filter = ('sprint_number', )
+    list_display = ('number', 'title', 'test_limit', )
+    search_fields = ('number', 'title', )
+    list_filter = ('sprint', )
 
 
 class ProblemAdmin(admin.ModelAdmin):
-    list_display = ('title', 'full_title', 'sprint_number',
-                    'contest_number', 'test_limit', )
+    list_display = ('title', 'full_title',
+                    'contest', 'test_limit', )
     search_fields = ('title', 'full_title', )
-    list_filter = ('sprint_number', 'contest_number', )
+    list_filter = ('contest__sprint', 'contest', )
 
 
 class TestAdmin(admin.ModelAdmin):
@@ -40,7 +41,7 @@ class TestAdmin(admin.ModelAdmin):
 
 
 class HintAdmin(admin.ModelAdmin):
-    list_display = ('text', 'problem')
+    list_display = ('number', 'text', 'problem')
     search_fields = ('text', )
     list_filter = ('problem', )
 
@@ -48,20 +49,31 @@ class HintAdmin(admin.ModelAdmin):
 class RestrictionAdmin(admin.ModelAdmin):
     list_display = ('user', 'problem', 'contest', 'request_counter', )
     search_fields = ('user__first_name', 'user__last_name',
-                     'problem__full_title', 'contest__contest_title', )
+                     'problem__full_title', 'contest__title', )
 
 
 class UserTestPairAdmin(admin.ModelAdmin):
-    list_display = ('user', 'test', )
-    search_fields = ('user__first_name', 'user__last_name', )
+    list_display = ('user', 'test', 'timestamp')
+    search_fields = ('user__first_name', 'user__last_name')
     list_filter = ('test', )
 
 
-class UserAdmin(admin.ModelAdmin):
+class UserHintPairAdmin(admin.ModelAdmin):
+    list_display = ('user', 'hint', 'timestamp')
+    search_fields = ('user__first_name', 'user__last_name')
+    list_filter = ('hint', )
+
+
+class StudentAdmin(admin.ModelAdmin):
     list_display = ('slack_id', 'first_name', 'last_name',
                     'specialty', 'cohort', )
     search_fields = ('first_name', 'last_name', 'slack_id', )
     list_filter = ('specialty', 'cohort', )
+
+
+class ResponseTasksAdmin(admin.ModelAdmin):
+    list_display = ('id', 'student', 'test', 'created')
+    search_fields = ('student__first_name', 'student__last_name')
 
 
 admin.site.register(Sprint, SprintAdmin)
@@ -71,6 +83,8 @@ admin.site.register(Test, TestAdmin)
 admin.site.register(Hint, HintAdmin)
 admin.site.register(Restriction, RestrictionAdmin)
 admin.site.register(UserTestPair, UserTestPairAdmin)
-admin.site.register(User, UserAdmin)
+admin.site.register(Student, StudentAdmin)
 admin.site.register(Faculty, FacultyAdmin)
 admin.site.register(Specialty, SpecialtyAdmin)
+admin.site.register(UserHintPair, UserHintPairAdmin)
+admin.site.register(ResponseTasks, ResponseTasksAdmin)
